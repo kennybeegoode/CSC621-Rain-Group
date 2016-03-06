@@ -1,0 +1,39 @@
+Alignment / Registration Techniques
+
+Use ITK class MetaImageIO to read a RAW file's *.mhd header. The header points to the raw image data. (There is also a class RawImageIO, but you must manually feed it the header parameters.)
+
+1. Cross-correlation (Capel and Zisserman, 1998; Cideciyan,
+1995; Solaiyappan and Gupta, 2000),
+2. Sum of squared differences (SSD) (Fitch et al., 2005;
+Lucas and Kanade, 1981; Orchard, 2005),
+3. Mutual information (Maes et al., 1997; Shekhar and
+Zagrodsky, 2002), and
+4. Phase correlation (Averbuch and Keller, 2002; Heng
+et al., 2000; Reddy and Chatterji, 1996).
+
+Geometric transformations: scaling, rotating, shifting
+
+Recommended: SSD cost function using fast four transform (FFT)  (Fitch
+et al., 2005; Orchard, 2005)
+
+Algorithm outline
+1. Given images f and g, compute the minimum moment
+maps Mf and Mg using Eqs. (6) and (7) as described in
+Section 2.2.
+2. Perform weighted SSD cost evaluation using the FFT
+using Eq. (10) as described in Section 2.2 to determine
+the optimal shift between f and g.
+3. Align f and g using the optimal shift and fuse the two
+images into a single image using techniques such as color
+fusion (where each image is assigned to a specific color
+band to create a fused color image) or fusion using
+mathematical operators (e.g. Addition, Subtraction,
+Logical AND, Logical OR, etc.)
+
+E(a, s, t)
+a - shift
+
+
+====
+
+itk::VariationalRegistrationSSDFunction< TFixedImage, TMovingImage, TDisplacementField >
