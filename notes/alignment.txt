@@ -37,3 +37,13 @@ a - shift
 ====
 
 itk::VariationalRegistrationSSDFunction< TFixedImage, TMovingImage, TDisplacementField >
+
+
+Monte-
+
+My program aligned the images two at a time by repeatedly shifting and taking the sum of squared differences. Since an image is a matrix of pixels denoted as brightness values, it is possible to subtract the matrices from eachother. By squaring the difference at each index, negative numbers are removed and a "score" can be reached by taking the sum of all these values. By testing a range of vertical and horizontal shifts, a good alignment can be found by identifying the minimum sum of squared differences out of all the shifts. Small differences generally mean that the brightness levels of both images are aligned with each other. Since each image has a distinct border, the program uses a distinct window centered on each image to compute the sum of squared differences values.
+LINK: http://cs.brown.edu/courses/cs129/results/proj1/baebi/
+
+
+LINK: http://www.itk.org/Doxygen/html/ImageSimilarityMetricsPage.html
+
