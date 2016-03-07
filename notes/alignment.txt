@@ -47,3 +47,8 @@ LINK: http://cs.brown.edu/courses/cs129/results/proj1/baebi/
 
 LINK: http://www.itk.org/Doxygen/html/ImageSimilarityMetricsPage.html
 
+
+LINK: http://cs.brown.edu/courses/cs129/results/proj1/baebi/
+
+
+PDF: http://einfodaily.com/piTunez/fusion.pdf
