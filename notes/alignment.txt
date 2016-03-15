@@ -41,14 +41,41 @@ itk::VariationalRegistrationSSDFunction< TFixedImage, TMovingImage, TDisplacemen
 
 Monte-
 
-My program aligned the images two at a time by repeatedly shifting and taking the sum of squared differences. Since an image is a matrix of pixels denoted as brightness values, it is possible to subtract the matrices from eachother. By squaring the difference at each index, negative numbers are removed and a "score" can be reached by taking the sum of all these values. By testing a range of vertical and horizontal shifts, a good alignment can be found by identifying the minimum sum of squared differences out of all the shifts. Small differences generally mean that the brightness levels of both images are aligned with each other. Since each image has a distinct border, the program uses a distinct window centered on each image to compute the sum of squared differences values.
+
+Image alignment is very similar to Image registration wherein we have two or more images and we are trying to map the images together. This can be done using several methods such as 
+1. Mean Squares- Sum of squared differences between intensity values. It requires the two objects to have intensity values in the same range.
+2. Normalized Correlation - This metric allows to register objects whose intensity values are related by a linear transformation.
+3. Pattern Intensity - This metric has the advantage of increase simultaneously when more samples are available and when intensity values are close.
+4. Mutual Information
+
+In our case, I think we should use Mean Squared or Sum of squared differences (SSD) as our data/images will have intensity values in approx the same range. 
+
+How SSD works-
+Every image is a matrix of pixels denoted by B/W value ranging from 0 to 255. The corresponding values will be substracted and then square the difference at each index. Negative numbers can be removed and a "score" can be reached by taking the sum of squared differences. By testing a range of vertical and horizontal shifts, a good alignment can be found by identifying the minimum sum of squared differences out of all the shifts.
+
+Psuedo code-
+ssd = 0
+for i = 0 to height - 1
+    for j = 0 to width - 1
+        diff = A[i][j] - B[i][j]
+        ssd += diff * diff
+
+The algorithm is very simple. Essentially we are looping through the image which is a matrix (2D array of values from 0-255) and finding the difference bwetween their B/W value(0-255). Then we add square this differnce and add it to the sum. Once we have this then we can identify the minimum SSD value and find the best alignment offset. 
+
+Algorithms:
+
+Simple Image Registration Method: This creates a sphere as the fixed image and an ellipse as the moving image. Then it aligns these two images and writes a new image. http://itk.org/Wiki/ITK/Examples/Registration/ImageRegistrationMethod
+
+MeanSquaresImageMetric1.cxx - This two two images as input from the command line i.e fixed image, and moving image. Then it runs the mean squared metric on these two images. https://github.com/InsightSoftwareConsortium/ITK/blob/master/Examples/RegistrationITKv4/MeanSquaresImageMetric1.cxx
+
+ITK Registration Github repo sources: https://github.com/InsightSoftwareConsortium/ITK/tree/master/Examples/RegistrationITKv4
+
+Related Links:
 LINK: http://cs.brown.edu/courses/cs129/results/proj1/baebi/
 
+PDF: http://einfodaily.com/piTunez/fusion.pdf
 
 LINK: http://www.itk.org/Doxygen/html/ImageSimilarityMetricsPage.html
 
 
-LINK: http://cs.brown.edu/courses/cs129/results/proj1/baebi/
 
-
-PDF: http://einfodaily.com/piTunez/fusion.pdf
