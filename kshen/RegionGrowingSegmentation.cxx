@@ -1,10 +1,3 @@
-/* SegmentationApp3d.cxx by the Region Growing Segmentation Group
-   authors Tilila El Moujahid, Lee Periolat, Tyler Wood, Robby Siu
-   for CSc 621/821, Professor Kazunori Okada, Spring 2012
-
-   Compiled with CMake and Microsoft Visual Studio
-*/
-
 #include "itkImage.h"
 #include "itkImageFileReader.h"
 #include "itkImageFileWriter.h"
