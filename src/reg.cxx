@@ -1,3 +1,13 @@
+// Mean squares 3D affine transform registration
+//
+// Usage: ./reg input1 input2 output [diff_img1]
+//              [diff_img2] [step_length] [max_iterations]
+// where input1, input2, output, diff_img1, diff_img2 are RAW image header
+// files (*.mhd). Default step length is 0.1 and default max iterations is 300.
+// diff_img1: the difference image between the fixed and moving images before
+//            registration
+// diff_img2: the difference image between the fixed and resampled moving image
+//
 // Based on examples:
 // http://www.na-mic.org/svn/Slicer3-lib-mirrors/trunk/Insight/Testing/Code/IO/itkMetaImageStreamingWriterIOTest.cxx
 // http://www.itk.org/Doxygen/html/Examples_2RegistrationITKv4_2ImageRegistration20_8cxx-example.html
@@ -76,9 +86,16 @@ int main(int argc, char* argv[])
     // display help if not enough command line arguments
     if (argc < 4)
     {
-        std::cerr << "Usage: " << argv[0] << " input1 input2 output" << std::endl;
-        std::cerr << "  where input1, input2, and output are RAW image header"
-                << " files (*.mhd)." << std::endl;
+        std::cerr <<
+                "Mean squares 3D affine transform registration\n\n"
+                "Usage: ./reg input1 input2 output [diff_img1]\n"
+                "             [diff_img2] [step_length] [max_iterations]\n"
+                "where input1, input2, output, diff_img1, diff_img2 are RAW image header\n"
+                "files (*.mhd). Default step length is 0.1 and default max iterations is 300.\n"
+                "diff_img1: the difference image between the fixed and moving images before\n"
+                "           registration\n"
+                "diff_img2: the difference image between the fixed and resampled moving image\n"
+                ;
         return EXIT_FAILURE;
     }
 
@@ -105,7 +122,7 @@ int main(int argc, char* argv[])
     registration->SetInterpolator(interpolator);
 
     //  The transform object is constructed below and passed to the registration
-    //  method.  
+    //  method.
     TransformType::Pointer transform = TransformType::New();
     registration->SetTransform(transform);
 
@@ -191,10 +208,10 @@ int main(int argc, char* argv[])
     optimizer->SetScales(optimizerScales);
 
     //  We also set the usual parameters of the optimization method. In this
-    //  case we are using an RegularStepGradientDescentOptimizer. Below, we define the
-    //  optimization parameters like initial step length, minimal step length
-    //  and number of iterations. These last two act as stopping criteria for
-    //  the optimization.
+    //  case we are using an RegularStepGradientDescentOptimizer. Below, we
+    //  define the optimization parameters like initial step length, minimal
+    //  step length and number of iterations. These last two act as stopping
+    //  criteria for the optimization.
     double steplength = 0.1;
     if (argc > 6)
     {
@@ -244,11 +261,11 @@ int main(int argc, char* argv[])
     std::cout << "   Iterations   = " << numberOfIterations << std::endl;
     std::cout << "   Metric value = " << bestValue << std::endl;
 
-    //  The following code is used to dump output images to files.
-    //  They illustrate the final results of the registration.
-    //  We will resample the moving image and write out the difference image
-    //  before and after registration. We will also rescale the intensities of the
-    //  difference images, so that they look better!
+    //  The following code is used to dump output images to files. They
+    //  illustrate the final results of the registration. We will resample the
+    //  moving image and write out the difference image before and after
+    //  registration. We will also rescale the intensities of the difference
+    //  images, so that they look better!
     typedef itk::ResampleImageFilter<
             MovingImageType,
             FixedImageType > ResampleFilterType;
@@ -293,7 +310,8 @@ int main(int argc, char* argv[])
     intensityRescaler->SetOutputMaximum(255);
     writer2->SetInput(intensityRescaler->GetOutput());
     resampler->SetDefaultPixelValue(1);
-    // Compute the difference image between the fixed and resampled moving image.
+    // Compute the difference image between the fixed and resampled moving
+    // image.
     if (argc > 5)
     {
         writer2->SetFileName(argv[5]);
