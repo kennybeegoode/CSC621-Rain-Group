@@ -56,9 +56,7 @@ public:
     itkNewMacro(Self);
 protected:
 
-    CommandIterationUpdate()
-    {
-    };
+    CommandIterationUpdate() { };
 public:
     typedef itk::RegularStepGradientDescentOptimizer OptimizerType;
     typedef const OptimizerType * OptimizerPointer;
@@ -156,10 +154,10 @@ int main(int argc, char* argv[])
     movingImageSize = movingImageReader->GetOutput()->GetLargestPossibleRegion().GetSize();
 
     std::cout << "dimensions of input images:\n";
-    std::cout << "   fixed  [0]:" << fixedImageSize[0] << " [1]:" << fixedImageSize[1]
-            << " [2]:" << fixedImageSize[2] << "\n"; // dimensions of input 1
-    std::cout << "   moving [0]:" << movingImageSize[0] << " [1]:" << movingImageSize[1]
-            << " [2]:" << movingImageSize[2] << "\n"; // dimensions of input 2
+    std::cout << "   fixed  [x]:" << fixedImageSize[0] << " [y]:" << fixedImageSize[1]
+            << " [z]:" << fixedImageSize[2] << "\n"; // dimensions of input 1
+    std::cout << "   moving [x]:" << movingImageSize[0] << " [y]:" << movingImageSize[1]
+            << " [z]:" << movingImageSize[2] << "\n"; // dimensions of input 2
 
     //  In this example, we again use the
     //  CenteredTransformInitializer helper class in order to compute
@@ -178,6 +176,13 @@ int main(int argc, char* argv[])
     //  Now we pass the parameters of the current transform as the initial
     //  parameters to be used when the registration process starts.
     registration->SetInitialTransformParameters(transform->GetParameters());
+
+    // display the translation parameters
+    std::cout << "\nTransformation parameters\n";
+    std::cout << "The first (NOutputDimension x NInputDimension) parameters "
+            "define the matrix and the\n last NOutputDimension parameters the "
+            "translation.\n"; // presumably on (x,y,z) ... ?
+    std::cout << transform->GetParameters() << std::endl;
 
     //  Keeping in mind that the scale of units in scaling, rotation and
     //  translation are quite different, we take advantage of the scaling
@@ -236,7 +241,7 @@ int main(int argc, char* argv[])
     // method.
     try
     {
-        std::cout << "Executing registration. This will take a while."
+        std::cout << "Executing registration. This will take awhile."
                 << std::endl;
         registration->Update();
         std::cout << "Optimizer stop condition: "
