@@ -1,0 +1,3 @@
+/Users/macbook/ITK/MyPrograms/Registration-Affine/CMakeFiles/edit_cache.dir
+/Users/macbook/ITK/MyPrograms/Registration-Affine/CMakeFiles/rebuild_cache.dir
+/Users/macbook/ITK/MyPrograms/Registration-Affine/CMakeFiles/ImageRegistrationAffine.dir
