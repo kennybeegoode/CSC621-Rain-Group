@@ -39,14 +39,17 @@ int main()
     	}
     }
 
-    double trans[3][3] = {{0.0, 0.0, 0.0},
-                            {1.0, 1.0, 0.0},
-                            {0.5, 2.0, 1.0}};
-
+    double trans[4][4] = {{1.0, 0.0, 0.0, 100.0},
+                            {0.0, 1.0, 0.0, 0.0},
+                            {0.0, 0.0, 1.0, 0.0},
+                            {0.0, 0.0, 0.0, 1.0}};
 
     calculator->loadSpine1(spiral, 50);
     calculator->loadTransofrm(trans);
-    calculator->compareSpines();
+    calculator->printSpine1();
+    calculator->transformSpine1();
+    calculator->printSpine1();
+    //calculator->compareSpines();
 
     // double (*ptr)[3] = spine1;
  

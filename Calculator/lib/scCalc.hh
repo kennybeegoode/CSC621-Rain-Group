@@ -17,14 +17,15 @@ private:
     double (*spine2)[3];
     unsigned spine2Length;
 
-    double transMatrix[3][3];
+    double transMatrix[4][4];
     void loadSpineX(double spine[][3], unsigned length, unsigned spineNumber);
 public:
     void loadSpine1(double spine[][3], unsigned length);
     void loadSpine2(double spine[][3], unsigned length);
-    void loadTransofrm(double matrix[3][3]);
-    // void runTransofrm();
+    void loadTransofrm(double matrix[4][4]);
+    void transformSpine1();
     void compareSpines();
+    void printSpine1();
 	//TODO: add transpose/rotate function
 	//TODO: add mean square distance function
 	//TODO: add circular calculation funcion

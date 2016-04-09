@@ -18,17 +18,37 @@ void ScCalc::loadSpineX(double spine[][3], unsigned length, unsigned spineNumber
     else {spine2 = newSpine; spine2Length = length;}
 }
 
-void ScCalc::loadTransofrm(double matrix[3][3])
+void ScCalc::loadTransofrm(double matrix[4][4])
 {
-    //transMatrix = {{0}};
 
-    for (unsigned i = 0; i < 3; ++i)
+    for (unsigned i = 0; i < 4; ++i)
     {
-        for (unsigned j = 0; j < 3; ++j)
+        for (unsigned j = 0; j < 4; ++j)
         {
             transMatrix[i][j] = matrix[i][j];
         }
     }
+}
+
+void ScCalc::transformSpine1()
+{
+    double (*newSpine)[3] = new double[spine1Length][3];
+
+    for (unsigned i = 0; i < spine1Length; ++i)
+    {
+        for(int j=0; j<3; ++j) 
+        {
+            newSpine[i][j] = 0;
+
+            for(int k=0; k<3; ++k)
+            {
+                newSpine[i][j]+=spine1[i][k]*transMatrix[j][k];
+            }
+            newSpine[i][j]+=transMatrix[j][3];
+        }
+    }
+
+    spine1 = newSpine;
 }
 
 void ScCalc::compareSpines()
@@ -48,7 +68,19 @@ void ScCalc::compareSpines()
         {
             cout << transMatrix[i][j] << " ";
         }
-        
+
+        cout << endl;
+    }
+}
+
+void ScCalc::printSpine1()
+{
+    for (unsigned i = 0; i < spine1Length; ++i)
+    {
+        for (int j = 0; j < 3; ++j)
+        {
+            cout << spine1[i][j] << " ";
+        }
         cout << endl;
     }
 }
