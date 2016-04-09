@@ -1,0 +1,20 @@
+cmake_minimum_required(VERSION 2.8)
+ 
+PROJECT(FinalProject)
+ 
+find_package(VTK REQUIRED)
+include(${VTK_USE_FILE})
+
+file( GLOB LIB_SOURCES lib/*.cpp )
+file( GLOB LIB_HEADERS lib/*.h )
+add_library( YourLib ${LIB_SOURCES} ${LIB_HEADERS} )
+ 
+add_executable(FinalProject MACOSX_BUNDLE FinalProject)
+ 
+if(VTK_LIBRARIES)
+  target_link_libraries(FinalProject ${VTK_LIBRARIES})
+else()
+  target_link_libraries(FinalProject vtkHybrid vtkWidgets)
+endif()
+
+target_link_libraries( FinalProject YourLib )
