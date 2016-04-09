@@ -2,6 +2,66 @@
 
 using namespace std;
 
+void ScCalc::loadSpineX(double spine[][3], unsigned length, unsigned spineNumber)
+{
+    double (*newSpine)[3] = new double[length][3];
+
+    for (unsigned i = 0; i < length; ++i)
+    {
+        for (unsigned j = 0; j < 3; ++j)
+        {
+            newSpine[i][j] = spine[i][j];
+        }
+    }
+
+    if (!spineNumber) {spine1 = newSpine; spine1Length = length;}
+    else {spine2 = newSpine; spine2Length = length;}
+}
+
+void ScCalc::loadTransofrm(double matrix[3][3])
+{
+    //transMatrix = {{0}};
+
+    for (unsigned i = 0; i < 3; ++i)
+    {
+        for (unsigned j = 0; j < 3; ++j)
+        {
+            transMatrix[i][j] = matrix[i][j];
+        }
+    }
+}
+
+void ScCalc::compareSpines()
+{
+    double (*ptr)[3] = spine1;
+
+    for (unsigned i = 0; i < spine1Length - 9; ++i)
+    {
+        cout << "derivative = " << curveDerivative(ptr);
+        cout << " second derivative = " << curveSecDerivative(ptr++);
+        cout << endl;
+    }
+
+    for (int i = 0; i < 3; ++i)
+    {
+        for (int j = 0; j < 3; ++j)
+        {
+            cout << transMatrix[i][j] << " ";
+        }
+        
+        cout << endl;
+    }
+}
+
+void ScCalc::loadSpine1(double spine[][3], unsigned length)
+{
+    loadSpineX(spine, length, 0);
+}
+void ScCalc::loadSpine2(double spine[][3], unsigned length)
+{
+    loadSpineX(spine, length, 1);
+}
+
 double ScCalc::firstDerivative(double a[5])
 {
     double firstDer(0.0);

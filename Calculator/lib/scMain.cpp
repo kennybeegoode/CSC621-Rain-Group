@@ -22,7 +22,7 @@ int main()
  //                           {0.5, 5.0, 1.0},
  //                           {0.0, 6.0, 0.0}};
 
-	ScCalc calcualtor;
+	ScCalc *calculator = new ScCalc();
 
     double spiral[50][3];
 
@@ -39,16 +39,24 @@ int main()
     	}
     }
 
-    double (*ptr)[3] = spiral;
+    double trans[3][3] = {{0.0, 0.0, 0.0},
+                            {1.0, 1.0, 0.0},
+                            {0.5, 2.0, 1.0}};
 
+
+    calculator->loadSpine1(spiral, 50);
+    calculator->loadTransofrm(trans);
+    calculator->compareSpines();
+
+    // double (*ptr)[3] = spine1;
  
 
-    for (int i = 0; i < 40; ++i)
-    {
-    	cout << "derivative = " << calcualtor.curveDerivative(ptr);
-    	cout << " second derivative = " << calcualtor.curveSecDerivative(ptr++);
-    	cout << endl;
-    }
+    // for (int i = 0; i < 40; ++i)
+    // {
+    // 	cout << "derivative = " << calcualtor->curveDerivative(ptr);
+    // 	cout << " second derivative = " << calcualtor->curveSecDerivative(ptr++);
+    // 	cout << endl;
+    // }
 
 	return 0;
 }
