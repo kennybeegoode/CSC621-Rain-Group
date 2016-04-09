@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
- 
-project(rawio)
- 
+
+project(reg)
+
 find_package(ITK REQUIRED)
 include(${ITK_USE_FILE})
 if (ITKVtkGlue_LOADED)
@@ -12,7 +12,7 @@ else()
   include(${ItkVtkGlue_USE_FILE})
   set(Glue ItkVtkGlue)
 endif()
- 
-add_executable(rawio MACOSX_BUNDLE rain.cxx)
-target_link_libraries(rawio
+
+add_executable(reg MACOSX_BUNDLE reg.cxx)
+target_link_libraries(reg
   ${Glue}  ${VTK_LIBRARIES} ${ITK_LIBRARIES})
