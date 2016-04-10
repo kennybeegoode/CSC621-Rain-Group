@@ -14,6 +14,8 @@
 #include <vtkProperty.h>
 #include "lib/scCalc.hh"
 
+#include "lib/AffineRegistration.hh"
+
 using namespace std;
 
 vtkSmartPointer<vtkActor> makeLine(double data[][3], unsigned length, double color[3])
@@ -60,6 +62,9 @@ vtkSmartPointer<vtkActor> makeLine(double data[][3], unsigned length, double col
 
 int main(int, char *[])
 {
+  AffineRegistration *reg = new AffineRegistration();
+	reg->align("case1.mhd", "case2.mhd");
+	// this will print to stdout for now
 
   ScCalc *calculator = new ScCalc();
 
