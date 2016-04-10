@@ -12,7 +12,7 @@
 #include <vtkRenderer.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkProperty.h>
-#include "scCalc.hh"
+#include "lib/scCalc.hh"
 
 using namespace std;
 
@@ -61,7 +61,7 @@ vtkSmartPointer<vtkActor> makeLine(double data[][3], unsigned length, double col
 int main(int, char *[])
 {
 
-  ScCalc calcualtor;
+  ScCalc *calculator = new ScCalc();
 
   double spiral[7][3] = {{0.0, 0.0, 0.0},
                          {1.0, 1.0, 0.0},
@@ -79,18 +79,19 @@ int main(int, char *[])
                          {0.5, 6.0, 1.0},
                          {0.0, 7.0, 0.0}};
 
+  double trans[4][4] = {{1.0, 0.0, 0.0, 5},
+                            {0.0, 1.0, 0.0, 0.0},
+                            {0.0, 0.0, 1.0, 0.0},
+                            {0.0, 0.0, 0.0, 1.0}};
+
   unsigned spLength = 7;
   double color1[3] = {1, 0, 0};
   double color2[3] = {0, 1, 0};
 
-  double (*ptr)[3] = spiral;
-
-  for (int i = 0; i < 7 - 5; ++i)
-  {
-    cout << "derivative = " << calcualtor.curveDerivative(ptr);
-    cout << " second derivative = " << calcualtor.curveSecDerivative(ptr++);
-     cout << endl;
-  }
+  calculator->loadSpine1(spiral, spLength);
+  calculator->loadSpine2(spiral2, spLength);
+  calculator->loadTransofrm(trans);
+  calculator->transformSpine1();
  
   // Setup render window, renderer, and interactor
   vtkSmartPointer<vtkRenderer> renderer = 
@@ -101,8 +102,8 @@ int main(int, char *[])
   vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = 
     vtkSmartPointer<vtkRenderWindowInteractor>::New();
   renderWindowInteractor->SetRenderWindow(renderWindow);
-  renderer->AddActor(makeLine(spiral,spLength,color1));
-  renderer->AddActor(makeLine(spiral2,spLength,color2));
+  renderer->AddActor(makeLine(calculator->spine1,calculator->spine1Length,color1));
+  renderer->AddActor(makeLine(calculator->spine2,calculator->spine2Length,color2));
  
   renderWindow->Render();
   renderWindowInteractor->Start();

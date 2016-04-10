@@ -11,15 +11,15 @@
 class ScCalc
 {
 private:
+    double transMatrix[4][4];
+    void loadSpineX(double spine[][3], unsigned length, unsigned spineNumber);
+public:
     double (*spine1)[3];
     unsigned spine1Length;
 
     double (*spine2)[3];
     unsigned spine2Length;
-
-    double transMatrix[4][4];
-    void loadSpineX(double spine[][3], unsigned length, unsigned spineNumber);
-public:
+    
     void loadSpine1(double spine[][3], unsigned length);
     void loadSpine2(double spine[][3], unsigned length);
     void loadTransofrm(double matrix[4][4]);
