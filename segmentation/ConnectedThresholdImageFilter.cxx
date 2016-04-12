@@ -80,11 +80,6 @@ int main(int argc, char *argv[])
     index[2] = atoi(argv[5]);
     connectedThreshold->SetSeed(index);
 
-    InternalImageType::Pointer image = smoothing->GetOutput();
-    reader->Update();
-
-    std::cout << "You selected pixel value " <<  image->GetPixel(index) << std::endl;
-
     // Running all filters at once
     try {
        writer->Update();
