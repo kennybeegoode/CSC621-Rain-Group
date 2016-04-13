@@ -18,6 +18,7 @@
 
 using namespace std;
 
+//Helper funcion, ignore this
 vtkSmartPointer<vtkActor> makeLine(double data[][3], unsigned length, double color[3])
 {
   vtkSmartPointer<vtkPoints> points =
@@ -60,14 +61,21 @@ vtkSmartPointer<vtkActor> makeLine(double data[][3], unsigned length, double col
   return actor;
 }
 
+//This is the main method for the entire project, add your part here
 int main(int, char *[])
 {
-  AffineRegistration *reg = new AffineRegistration();
-	reg->align("case1.mhd", "case2.mhd");
-	// this will print to stdout for now
+  //SEED INPUT GUI
+  //TODO: Ken, your class should go here
+  //The output should be a double[3]
 
-  ScCalc *calculator = new ScCalc();
+  double seed[3] = {0.0, 0.0, 0.0}; //Hardcoded seed to be used while ken is working on his GUI
 
+  //SEGMENTATION
+  //TODO: Marie, add a call to your segmentation class here
+  //Output should be a double[spine length][3]
+  //Feel free to modify hardcoded seed if ken's is not done yet
+
+  //Hardcoded segmentation output
   double spiral[7][3] = {{0.0, 0.0, 0.0},
                          {1.0, 1.0, 0.0},
                          {0.5, 2.0, 1.0},
@@ -75,6 +83,7 @@ int main(int, char *[])
                          {1.0, 4.0, 0.0},
                          {0.5, 5.0, 1.0},
                          {0.0, 6.0, 0.0}};
+  unsigned spLength = 7;
 
   double spiral2[7][3] = {{0.0, 1.0, 0.0},
                          {1.0, 2.0, 0.0},
@@ -83,21 +92,33 @@ int main(int, char *[])
                          {1.0, 5.0, 0.0},
                          {0.5, 6.0, 1.0},
                          {0.0, 7.0, 0.0}};
+  unsigned spLength2 = 7;
 
+  //REGISTRATION
+  //TODO: Eric and Monte, change this to produce output!
+  AffineRegistration *reg = new AffineRegistration();
+	reg->align("case1.mhd", "case2.mhd");
+	// this will print to stdout for now
+
+  ScCalc *calculator = new ScCalc();
+
+  //Hardcoded registration output
   double trans[4][4] = {{1.0, 0.0, 0.0, 5},
                             {0.0, 1.0, 0.0, 0.0},
                             {0.0, 0.0, 1.0, 0.0},
                             {0.0, 0.0, 0.0, 1.0}};
 
-  unsigned spLength = 7;
-  double color1[3] = {1, 0, 0};
-  double color2[3] = {0, 1, 0};
-
+  //FINAL RESULT CALCULATION
+  //TODO: Juris will need to improve this to produce reasonable results
   calculator->loadSpine1(spiral, spLength);
-  calculator->loadSpine2(spiral2, spLength);
+  calculator->loadSpine2(spiral2, spLength2);
   calculator->loadTransofrm(trans);
   calculator->transformSpine1();
  
+  //Set colors for spine
+  double color1[3] = {1, 0, 0};
+  double color2[3] = {0, 1, 0};
+
   // Setup render window, renderer, and interactor
   vtkSmartPointer<vtkRenderer> renderer = 
     vtkSmartPointer<vtkRenderer>::New();
@@ -110,6 +131,7 @@ int main(int, char *[])
   renderer->AddActor(makeLine(calculator->spine1,calculator->spine1Length,color1));
   renderer->AddActor(makeLine(calculator->spine2,calculator->spine2Length,color2));
  
+  //Ouput final view
   renderWindow->Render();
   renderWindowInteractor->Start();
  
