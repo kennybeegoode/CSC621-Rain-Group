@@ -1,4 +1,4 @@
-#include "AffineRegistration.hh"
+#include "Registration.hh" 
 
 using namespace std;
 
@@ -10,7 +10,6 @@ public:
     typedef itk::SmartPointer<Self> Pointer;
     itkNewMacro(Self);
 protected:
-
     CommandIterationUpdate() { };
 public:
     typedef itk::RegularStepGradientDescentOptimizer OptimizerType;
@@ -34,6 +33,10 @@ public:
     }
 };
 
+void Registration::rigidAlign(string fixedImageInput, string movingImageInput) {
+    std::cout <<"Yeah! This works fine!"<<endl;
+}
+
 /**
  * Performs 3D affine registration using mean squares, with a default max
  * number of iterations of 300.
@@ -41,11 +44,11 @@ public:
  * @param movingImageInput       - a metaimage header
  * @param transformParameters    - array[4][4] to write transform matrix
  */
-void AffineRegistration::alignAffine(string fixedImageInput, string movingImageInput,
+void Registration::affineAlign(string fixedImageInput, string movingImageInput,
         double transformParameters[][4])
 {
-    return AffineRegistration::alignAffine(fixedImageInput, movingImageInput,
-            transformParameters, 300);
+    return Registration::affineAlign(fixedImageInput, movingImageInput,
+            transformParameters, 1);
 }
 
 /**
@@ -55,10 +58,9 @@ void AffineRegistration::alignAffine(string fixedImageInput, string movingImageI
  * @param transformParameters    - array[4][4] to write transform matrix
  * @param maxNumberOfIterations  - max number of iterations; default is 300
  */
- void AffineRegistration::alignAffine(string fixedImageInput, string movingImageInput,
+ void Registration::affineAlign(string fixedImageInput, string movingImageInput,
          double transformParameters[][4], int maxNumberOfIterations)
  {
-    //put everything that beliongs to main in here
  // Define image types
     const unsigned int Dimension = 3;
     typedef int16_t PixelType; // this determines the size of a pixel

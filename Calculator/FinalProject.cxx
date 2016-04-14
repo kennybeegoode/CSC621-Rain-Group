@@ -12,9 +12,9 @@
 #include <vtkRenderer.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkProperty.h>
-#include "lib/scCalc.hh"
 
-#include "lib/AffineRegistration.hh"
+#include "lib/scCalc.hh"
+#include "lib/Registration.hh"
 
 using namespace std;
 
@@ -62,7 +62,7 @@ vtkSmartPointer<vtkActor> makeLine(double data[][3], unsigned length, double col
 }
 
 //This is the main method for the entire project, add your part here
-int main(int, char *[])
+int main(int, char *argv[])
 {
   //SEED INPUT GUI
   //TODO: Ken, your class should go here
@@ -94,23 +94,28 @@ int main(int, char *[])
                          {0.0, 7.0, 0.0}};
   unsigned spLength2 = 7;
 
+  
+
   //REGISTRATION
   //TODO: Eric and Monte, change this to produce output!
+  Registration *reg = new Registration();
+	reg->rigidAlign(argv[1], argv[2]);
+
   //Hardcoded registration output
   // double trans[4][4] = {{1.0, 0.0, 0.0, 5},
   //                           {0.0, 1.0, 0.0, 0.0},
   //                           {0.0, 0.0, 1.0, 0.0},
   //                           {0.0, 0.0, 0.0, 1.0}};
   double trans[4][4]; // to be populated by registration algorithm
-
-  AffineRegistration *reg = new AffineRegistration();
   // run registration with default number of max optimizations (300)
   //reg->alignAffine("case1.mhd", "case2.mhd", trans);
   // test with 1 iteration of optimizer
-  reg->alignAffine("case1.mhd", "case2.mhd", trans, 1);
+  reg->affineAlign(argv[1], argv[2], trans, 1);
+
+
+
 
   ScCalc *calculator = new ScCalc();
-
   //FINAL RESULT CALCULATION
   //TODO: Juris will need to improve this to produce reasonable results
   calculator->loadSpine1(spiral, spLength);

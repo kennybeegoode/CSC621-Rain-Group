@@ -1,6 +1,5 @@
-// in myclass.h
-#ifndef _AFFINE_REGISTRATION_HH__
-#define _AFFINE_REGISTRATION_HH__
+#ifndef _REGISTRATION_HH__
+#define _REGISTRATION_HH__
 
 #if defined(_MSC_VER)
 #pragma warning ( disable : 4786 )
@@ -10,27 +9,31 @@
 #define ITK_LEAN_AND_MEAN
 #endif
 
-#include <fstream>
-#include "stdint.h"
-
 // image file I/O
 #include "itkImageFileReader.h"
 #include "itkImageFileWriter.h"
 #include "itkMetaImageIO.h"
 
-// 3d registration
+// 3d Affine Registration
 #include "itkImageRegistrationMethod.h"
 #include "itkMeanSquaresImageToImageMetric.h"
 #include "itkRegularStepGradientDescentOptimizer.h"
 #include "itkCenteredTransformInitializer.h"
 #include "itkAffineTransform.h"
-#include "itkImageFileReader.h"
-#include "itkImageFileWriter.h"
 #include "itkResampleImageFilter.h"
 #include "itkCastImageFilter.h"
 #include "itkSubtractImageFilter.h"
 #include "itkRescaleIntensityImageFilter.h"
 
+//3D Rigid Transform Registration
+#include "itkImageRegistrationMethodv4.h"
+#include "itkMeanSquaresImageToImageMetricv4.h"
+#include "itkVersorRigid3DTransform.h"
+#include "itkRegularStepGradientDescentOptimizerv4.h"
+#include "itkExtractImageFilter.h"
+
+#include <fstream>
+#include "stdint.h"
 #include <string>
 #include <sstream>  // std::stringstream
 #include <stdlib.h> // std::atof
@@ -43,12 +46,15 @@
 #include "itkCommand.h"
 
 //Spine Curvature Calculator
-class AffineRegistration
+class Registration
 {
 public:
-	void alignAffine(std::string fixedImageInput, std::string movingImageInput,
+	static void rigidAlign(std::string fixedImageInput,
+		std::string movingImageInput);
+
+	void affineAlign(std::string fixedImageInput, std::string movingImageInput,
 			double transformParameters[][4]);
-  void alignAffine(std::string fixedImageInput,	std::string movingImageInput,
+	void affineAlign(std::string fixedImageInput,	std::string movingImageInput,
 			double transformParameters[][4], int maxNumberOfIterations);
 };
 
