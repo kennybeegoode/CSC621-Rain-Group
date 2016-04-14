@@ -33,8 +33,201 @@ public:
     }
 };
 
-void Registration::rigidAlign(string fixedImageInput, string movingImageInput) {
-    std::cout <<"Yeah! This works fine!"<<endl;
+void Registration::rigidAlign(string fixedImageInput, string movingImageInput, double transformParameters[][4], int maxNumberOfIterations) {
+
+    std::cout << "Number of iterations:" << maxNumberOfIterations <<std::endl;
+
+
+    const unsigned int                          Dimension = 3;
+    typedef  float                              PixelType;
+    typedef itk::Image< PixelType, Dimension >  FixedImageType;
+    typedef itk::Image< PixelType, Dimension >  MovingImageType;
+
+    typedef itk::VersorRigid3DTransform< double > TransformType;
+
+    typedef itk::RegularStepGradientDescentOptimizerv4<double>    OptimizerType;
+    typedef itk::MeanSquaresImageToImageMetricv4<
+                                            FixedImageType,
+                                            MovingImageType >   MetricType;
+    typedef itk::ImageRegistrationMethodv4<
+                                      FixedImageType,
+                                      MovingImageType,
+                                      TransformType >           RegistrationType;
+
+    MetricType::Pointer         metric        = MetricType::New();
+    OptimizerType::Pointer      optimizer     = OptimizerType::New();
+    RegistrationType::Pointer   registration  = RegistrationType::New();
+
+    registration->SetMetric(        metric        );
+    registration->SetOptimizer(     optimizer     );
+
+    TransformType::Pointer  initialTransform = TransformType::New();
+
+    typedef itk::ImageFileReader< FixedImageType  > FixedImageReaderType;
+    itk::MetaImageIO::Pointer fixedImageIO = itk::MetaImageIO::New();
+    FixedImageReaderType::Pointer  fixedImageReader  = FixedImageReaderType::New();
+    fixedImageReader->SetImageIO(fixedImageIO);
+    fixedImageReader->SetFileName(fixedImageInput);  
+    fixedImageReader->SetUseStreaming(true);
+    fixedImageIO->SetUseStreamedReading(true);
+
+
+    typedef itk::ImageFileReader< MovingImageType > MovingImageReaderType;
+    itk::MetaImageIO::Pointer movingImageIO = itk::MetaImageIO::New();
+    MovingImageReaderType::Pointer movingImageReader = MovingImageReaderType::New();
+    movingImageReader->SetImageIO(movingImageIO);
+    movingImageReader->SetFileName(movingImageInput);
+    movingImageReader->SetUseStreaming(true);
+    movingImageIO->SetUseStreamedReading(true);
+
+    registration->SetFixedImage(    fixedImageReader->GetOutput()    );
+    registration->SetMovingImage(   movingImageReader->GetOutput()   );
+
+    typedef itk::CenteredTransformInitializer<
+    TransformType,
+    FixedImageType,
+    MovingImageType >  TransformInitializerType;
+    TransformInitializerType::Pointer initializer =
+    TransformInitializerType::New();
+
+    initializer->SetTransform(   initialTransform );
+    initializer->SetFixedImage(  fixedImageReader->GetOutput() );
+    initializer->SetMovingImage( movingImageReader->GetOutput() );
+
+    initializer->MomentsOn();
+
+    initializer->InitializeTransform();
+
+    typedef TransformType::VersorType  VersorType;
+    typedef VersorType::VectorType     VectorType;
+    VersorType     rotation;
+    VectorType     axis;
+    axis[0] = 0.0;
+    axis[1] = 0.0;
+    axis[2] = 1.0;
+    const double angle = 0;
+    rotation.Set(  axis, angle  );
+    initialTransform->SetRotation( rotation );
+
+    registration->SetInitialTransform( initialTransform );
+
+    typedef OptimizerType::ScalesType       OptimizerScalesType;
+    OptimizerScalesType optimizerScales( initialTransform->GetNumberOfParameters() );
+    const double translationScale = 1.0 / 1000.0;
+    optimizerScales[0] = 1.0;
+    optimizerScales[1] = 1.0;
+    optimizerScales[2] = 1.0;
+    optimizerScales[3] = translationScale;
+    optimizerScales[4] = translationScale;
+    optimizerScales[5] = translationScale;
+    optimizer->SetScales( optimizerScales );
+    optimizer->SetNumberOfIterations( maxNumberOfIterations );
+    optimizer->SetLearningRate( 0.2 );
+    optimizer->SetMinimumStepLength( 0.001 );
+    optimizer->SetReturnBestParametersAndValue(true);
+
+    CommandIterationUpdate::Pointer observer = CommandIterationUpdate::New();
+    optimizer->AddObserver( itk::IterationEvent(), observer );
+
+    const unsigned int numberOfLevels = 1;
+
+    RegistrationType::ShrinkFactorsArrayType shrinkFactorsPerLevel;
+    shrinkFactorsPerLevel.SetSize( 1 );
+    shrinkFactorsPerLevel[0] = 1;
+
+    RegistrationType::SmoothingSigmasArrayType smoothingSigmasPerLevel;
+    smoothingSigmasPerLevel.SetSize( 1 );
+    smoothingSigmasPerLevel[0] = 0;
+
+    registration->SetNumberOfLevels( numberOfLevels );
+    registration->SetSmoothingSigmasPerLevel( smoothingSigmasPerLevel );
+    registration->SetShrinkFactorsPerLevel( shrinkFactorsPerLevel );
+
+    try
+    {
+    std::cout << "\nExecuting registration. This will take awhile."
+                << std::endl;
+    registration->Update();
+    std::cout << "Optimizer stop condition: "
+              << registration->GetOptimizer()->GetStopConditionDescription()
+              << std::endl;
+    }
+    catch( itk::ExceptionObject & err )
+    {
+    std::cerr << "ExceptionObject caught !" << std::endl;
+    std::cerr << err << std::endl;
+    return;
+    }
+
+    const TransformType::ParametersType finalParameters =
+                            registration->GetOutput()->Get()->GetParameters();
+
+    const double versorX              = finalParameters[0];
+    const double versorY              = finalParameters[1];
+    const double versorZ              = finalParameters[2];
+    const double finalTranslationX    = finalParameters[3];
+    const double finalTranslationY    = finalParameters[4];
+    const double finalTranslationZ    = finalParameters[5];
+    const unsigned int numberOfIterations = optimizer->GetCurrentIteration();
+    const double bestValue = optimizer->GetValue();
+
+    // Print out results
+    std::cout << std::endl << std::endl;
+    std::cout << "Result = " << std::endl;
+    std::cout << " versor X      = " << versorX  << std::endl;
+    std::cout << " versor Y      = " << versorY  << std::endl;
+    std::cout << " versor Z      = " << versorZ  << std::endl;
+    std::cout << " Translation X = " << finalTranslationX  << std::endl;
+    std::cout << " Translation Y = " << finalTranslationY  << std::endl;
+    std::cout << " Translation Z = " << finalTranslationZ  << std::endl;
+    std::cout << " Iterations    = " << numberOfIterations << std::endl;
+    std::cout << " Metric value  = " << bestValue          << std::endl;
+
+    // interpret final transformation parameters as 4x4 matrix
+    // tokenize the parameters
+    stringstream ss;
+    ss << finalParameters << endl;
+    string paramsString = ss.str();
+    paramsString = paramsString.substr(1, paramsString.length() - 3);
+    vector<double> params_v;
+    char delim = ',';
+    size_t start = paramsString.find_first_not_of(delim), end = start;
+    while (start != string::npos)
+    {
+        end = paramsString.find(delim, start);
+        params_v.push_back(atof(paramsString.substr(start, end - start).c_str()));
+        start = paramsString.find_first_not_of(delim, end);
+    }
+    
+     // populate the translation matrix
+    transformParameters[0][0] = params_v[0];
+    transformParameters[1][0] = params_v[1];
+    transformParameters[2][0] = params_v[2];
+
+    transformParameters[0][1] = params_v[3];
+    transformParameters[1][1] = params_v[4];
+    transformParameters[2][1] = params_v[5];
+
+    transformParameters[0][2] = params_v[6];
+    transformParameters[1][2] = params_v[7];
+    transformParameters[2][2] = params_v[8];
+
+    transformParameters[3][0] = params_v[9];
+    transformParameters[3][1] = params_v[10];
+    transformParameters[3][2] = params_v[11];
+
+    transformParameters[0][3] = transformParameters[1][3]
+            = transformParameters[2][3] = 0.0;
+    transformParameters[3][3] = 1.0;
+
+    // display the matrix
+    cout << "   Transform matrix:" << endl;
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+            cout << setw(15) << transformParameters[j][i] << " ";
+        cout << endl;
+    }
 }
 
 /**

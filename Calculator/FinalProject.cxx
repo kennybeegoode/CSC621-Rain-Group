@@ -94,25 +94,22 @@ int main(int, char *argv[])
                          {0.0, 7.0, 0.0}};
   unsigned spLength2 = 7;
 
-  
 
   //REGISTRATION
   //TODO: Eric and Monte, change this to produce output!
   Registration *reg = new Registration();
-	reg->rigidAlign(argv[1], argv[2]);
+  double trans[4][4]; // to be populated by registration algorithm
+	reg->rigidAlign(argv[1], argv[2], trans, 1);
 
   //Hardcoded registration output
   // double trans[4][4] = {{1.0, 0.0, 0.0, 5},
   //                           {0.0, 1.0, 0.0, 0.0},
   //                           {0.0, 0.0, 1.0, 0.0},
   //                           {0.0, 0.0, 0.0, 1.0}};
-  double trans[4][4]; // to be populated by registration algorithm
-  // run registration with default number of max optimizations (300)
-  //reg->alignAffine("case1.mhd", "case2.mhd", trans);
+  double trans2[4][4]; // to be populated by registration algorithm
+  // run registration with default number of max optimizations (1)
   // test with 1 iteration of optimizer
-  reg->affineAlign(argv[1], argv[2], trans, 1);
-
-
+//  reg->affineAlign(argv[1], argv[2], trans2, 1);
 
 
   ScCalc *calculator = new ScCalc();

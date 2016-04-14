@@ -49,9 +49,7 @@
 class Registration
 {
 public:
-	static void rigidAlign(std::string fixedImageInput,
-		std::string movingImageInput);
-
+	void rigidAlign(std::string fixedImageInput, std::string movingImageInput, double transformParameters[][4], int maxNumberOfIterations);
 	void affineAlign(std::string fixedImageInput, std::string movingImageInput,
 			double transformParameters[][4]);
 	void affineAlign(std::string fixedImageInput,	std::string movingImageInput,
