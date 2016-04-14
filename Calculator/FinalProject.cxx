@@ -28,32 +28,32 @@ vtkSmartPointer<vtkActor> makeLine(double data[][3], unsigned length, double col
   {
     points->InsertPoint(i, data[i]);
   }
- 
-  vtkSmartPointer<vtkKochanekSpline> xSpline = 
+
+  vtkSmartPointer<vtkKochanekSpline> xSpline =
     vtkSmartPointer<vtkKochanekSpline>::New();
-  vtkSmartPointer<vtkKochanekSpline> ySpline = 
+  vtkSmartPointer<vtkKochanekSpline> ySpline =
     vtkSmartPointer<vtkKochanekSpline>::New();
-  vtkSmartPointer<vtkKochanekSpline> zSpline = 
+  vtkSmartPointer<vtkKochanekSpline> zSpline =
     vtkSmartPointer<vtkKochanekSpline>::New();
- 
-  vtkSmartPointer<vtkParametricSpline> spline = 
+
+  vtkSmartPointer<vtkParametricSpline> spline =
     vtkSmartPointer<vtkParametricSpline>::New();
   spline->SetXSpline(xSpline);
   spline->SetYSpline(ySpline);
   spline->SetZSpline(zSpline);
   spline->SetPoints(points);
 
-  vtkSmartPointer<vtkParametricFunctionSource> functionSource = 
+  vtkSmartPointer<vtkParametricFunctionSource> functionSource =
     vtkSmartPointer<vtkParametricFunctionSource>::New();
   functionSource->SetParametricFunction(spline);
   functionSource->Update();
 
   // Setup actor and mapper
-  vtkSmartPointer<vtkPolyDataMapper> mapper = 
+  vtkSmartPointer<vtkPolyDataMapper> mapper =
     vtkSmartPointer<vtkPolyDataMapper>::New();
   mapper->SetInputConnection(functionSource->GetOutputPort());
- 
-  vtkSmartPointer<vtkActor> actor = 
+
+  vtkSmartPointer<vtkActor> actor =
     vtkSmartPointer<vtkActor>::New();
   actor->SetMapper(mapper);
   actor->GetProperty()->SetColor(color[0], color[1], color[2]); //(R,G,B)
@@ -96,17 +96,20 @@ int main(int, char *[])
 
   //REGISTRATION
   //TODO: Eric and Monte, change this to produce output!
+  //Hardcoded registration output
+  // double trans[4][4] = {{1.0, 0.0, 0.0, 5},
+  //                           {0.0, 1.0, 0.0, 0.0},
+  //                           {0.0, 0.0, 1.0, 0.0},
+  //                           {0.0, 0.0, 0.0, 1.0}};
+  double trans[4][4]; // to be populated by registration algorithm
+
   AffineRegistration *reg = new AffineRegistration();
-	reg->align("case1.mhd", "case2.mhd");
-	// this will print to stdout for now
+  // run registration with default number of max optimizations (300)
+  //reg->alignAffine("case1.mhd", "case2.mhd", trans);
+  // test with 1 iteration of optimizer
+  reg->alignAffine("case1.mhd", "case2.mhd", trans, 1);
 
   ScCalc *calculator = new ScCalc();
-
-  //Hardcoded registration output
-  double trans[4][4] = {{1.0, 0.0, 0.0, 5},
-                            {0.0, 1.0, 0.0, 0.0},
-                            {0.0, 0.0, 1.0, 0.0},
-                            {0.0, 0.0, 0.0, 1.0}};
 
   //FINAL RESULT CALCULATION
   //TODO: Juris will need to improve this to produce reasonable results
@@ -114,26 +117,26 @@ int main(int, char *[])
   calculator->loadSpine2(spiral2, spLength2);
   calculator->loadTransofrm(trans);
   calculator->transformSpine1();
- 
+
   //Set colors for spine
   double color1[3] = {1, 0, 0};
   double color2[3] = {0, 1, 0};
 
   // Setup render window, renderer, and interactor
-  vtkSmartPointer<vtkRenderer> renderer = 
+  vtkSmartPointer<vtkRenderer> renderer =
     vtkSmartPointer<vtkRenderer>::New();
-  vtkSmartPointer<vtkRenderWindow> renderWindow = 
+  vtkSmartPointer<vtkRenderWindow> renderWindow =
     vtkSmartPointer<vtkRenderWindow>::New();
   renderWindow->AddRenderer(renderer);
-  vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = 
+  vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor =
     vtkSmartPointer<vtkRenderWindowInteractor>::New();
   renderWindowInteractor->SetRenderWindow(renderWindow);
   renderer->AddActor(makeLine(calculator->spine1,calculator->spine1Length,color1));
   renderer->AddActor(makeLine(calculator->spine2,calculator->spine2Length,color2));
- 
+
   //Ouput final view
   renderWindow->Render();
   renderWindowInteractor->Start();
- 
+
   return EXIT_SUCCESS;
 }

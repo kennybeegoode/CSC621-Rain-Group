@@ -32,6 +32,9 @@
 #include "itkRescaleIntensityImageFilter.h"
 
 #include <string>
+#include <sstream>  // std::stringstream
+#include <stdlib.h> // std::atof
+#include <iomanip>  // std::setw
 
 //
 //  The following piece of code implements an observer
@@ -43,8 +46,10 @@
 class AffineRegistration
 {
 public:
-	static void align(std::string fixedImageInput,
-		std::string movingImageInput);
+	void alignAffine(std::string fixedImageInput, std::string movingImageInput,
+			double transformParameters[][4]);
+  void alignAffine(std::string fixedImageInput,	std::string movingImageInput,
+			double transformParameters[][4], int maxNumberOfIterations);
 };
 
 #endif

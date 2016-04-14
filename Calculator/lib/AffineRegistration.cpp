@@ -1,4 +1,4 @@
-#include "AffineRegistration.hh" 
+#include "AffineRegistration.hh"
 
 using namespace std;
 
@@ -34,7 +34,30 @@ public:
     }
 };
 
-void AffineRegistration::align(string fixedImageInput, string movingImageInput) {
+/**
+ * Performs 3D affine registration using mean squares, with a default max
+ * number of iterations of 300.
+ * @param fixedImageInput        - a metaimage header
+ * @param movingImageInput       - a metaimage header
+ * @param transformParameters    - array[4][4] to write transform matrix
+ */
+void AffineRegistration::alignAffine(string fixedImageInput, string movingImageInput,
+        double transformParameters[][4])
+{
+    return AffineRegistration::alignAffine(fixedImageInput, movingImageInput,
+            transformParameters, 300);
+}
+
+/**
+ * Performs 3D affine registration using mean squares.
+ * @param fixedImageInput        - a metaimage header
+ * @param movingImageInput       - a metaimage header
+ * @param transformParameters    - array[4][4] to write transform matrix
+ * @param maxNumberOfIterations  - max number of iterations; default is 300
+ */
+ void AffineRegistration::alignAffine(string fixedImageInput, string movingImageInput,
+         double transformParameters[][4], int maxNumberOfIterations)
+ {
     //put everything that beliongs to main in here
  // Define image types
     const unsigned int Dimension = 3;
@@ -86,7 +109,7 @@ void AffineRegistration::align(string fixedImageInput, string movingImageInput) 
     registration->SetMovingImage(movingImageReader->GetOutput());
     fixedImageReader->Update();
     registration->SetFixedImageRegion(fixedImageReader->GetOutput()->GetBufferedRegion());
-	
+
     // Get & print useful statistics about the input images
     fixedImageReader->GenerateOutputInformation();
     movingImageReader->GenerateOutputInformation();
@@ -150,7 +173,6 @@ void AffineRegistration::align(string fixedImageInput, string movingImageInput) 
     //  step length and number of iterations. These last two act as stopping
     //  criteria for the optimization.
     double steplength = 0.1;
-    unsigned int maxNumberOfIterations = 300;
 
   optimizer->SetMaximumStepLength(steplength);
     optimizer->SetMinimumStepLength(0.0001);
@@ -160,16 +182,16 @@ void AffineRegistration::align(string fixedImageInput, string movingImageInput) 
     // Create the Command observer and register it with the optimizer.
 	// TODO: We might not need this.
     CommandIterationUpdate::Pointer observer = CommandIterationUpdate::New();
-    optimizer->AddObserver(itk::IterationEvent(), observer);	
+    optimizer->AddObserver(itk::IterationEvent(), observer);
 
 	// Trigger execution of the registration method by calling the Update()
     // method.
     try
     {
-        std::cout << "Executing registration. This will take awhile."
+        std::cout << "\nExecuting registration. This will take awhile."
                 << std::endl;
         registration->Update();
-        std::cout << "Optimizer stop condition: "
+        std::cout << "\nFinished registration.\nOptimizer stop condition: "
                 << registration->GetOptimizer()->GetStopConditionDescription()
                 << std::endl;
     } catch (itk::ExceptionObject & err)
@@ -190,7 +212,50 @@ void AffineRegistration::align(string fixedImageInput, string movingImageInput) 
     std::cout << "Result:" << std::endl;
     std::cout << "   Iterations   = " << numberOfIterations << std::endl;
     std::cout << "   Metric value = " << bestValue << std::endl;
-	
+
+    // interpret final transformation parameters as 4x4 matrix
+    // tokenize the parameters
+    stringstream ss;
+    ss << finalParameters << endl;
+    string paramsString = ss.str();
+    paramsString = paramsString.substr(1, paramsString.length() - 3);
+    vector<double> params_v;
+    char delim = ',';
+    size_t start = paramsString.find_first_not_of(delim), end = start;
+    while (start != string::npos)
+    {
+        end = paramsString.find(delim, start);
+        params_v.push_back(atof(paramsString.substr(start, end - start).c_str()));
+        start = paramsString.find_first_not_of(delim, end);
+    }
+
+    // populate the translation matrix
+    transformParameters[0][0] = params_v[0];
+    transformParameters[1][0] = params_v[1];
+    transformParameters[2][0] = params_v[2];
+
+    transformParameters[0][1] = params_v[3];
+    transformParameters[1][1] = params_v[4];
+    transformParameters[2][1] = params_v[5];
+
+    transformParameters[0][2] = params_v[6];
+    transformParameters[1][2] = params_v[7];
+    transformParameters[2][2] = params_v[8];
+
+    transformParameters[3][0] = params_v[9];
+    transformParameters[3][1] = params_v[10];
+    transformParameters[3][2] = params_v[11];
+
+    transformParameters[0][3] = transformParameters[1][3]
+            = transformParameters[2][3] = 0.0;
+    transformParameters[3][3] = 1.0;
+
+    // display the matrix
+    cout << "   Transform matrix:" << endl;
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+            cout << setw(15) << transformParameters[j][i] << " ";
+        cout << endl;
+    }
 }
-
-
