@@ -18,17 +18,17 @@
 class MouseInteractorStyle3 : public vtkInteractorStyleTrackballCamera
 {
 public:
-  static MouseInteractorStyle3* New();
+	static MouseInteractorStyle3* New();
 
-  virtual void OnLeftButtonDown() 
-  {
-    std::cout << "Pressed left mouse button." << std::endl;
-    int x = this->Interactor->GetEventPosition()[0];
-    int y = this->Interactor->GetEventPosition()[1];
-    std::cout << "(x,y) = (" << x << "," << y << ")" << std::endl;
+	virtual void OnLeftButtonDown() 
+	{
+		std::cout << "Pressed left mouse button." << std::endl;
+		int x = this->Interactor->GetEventPosition()[0];
+		int y = this->Interactor->GetEventPosition()[1];
+		std::cout << "(x,y) = (" << x << "," << y << ")" << std::endl;
 
-    vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
-  }
+		vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
+	}
 
 };
 
@@ -37,59 +37,76 @@ vtkStandardNewMacro(MouseInteractorStyle3);
 int main(int argc, char *argv[])
 {
 
-  if(argc < 2)
-  {
-    std::cerr << "Required arguments: image.mha" << std::endl;
-    return EXIT_FAILURE;
-  }
+	if(argc < 2)
+	{
+		std::cerr << "Required arguments: image.mha" << std::endl;
+		return EXIT_FAILURE;
+	}
 
-  int z;
+	int z;
 
-  
+
 
   //read mhd image
-  vtkSmartPointer<vtkMetaImageReader>reader =
+	vtkSmartPointer<vtkMetaImageReader>reader =
 
-  vtkSmartPointer<vtkMetaImageReader>::New();
+	vtkSmartPointer<vtkMetaImageReader>::New();
 
-  reader->SetFileName(argv[1]);
+	reader->SetFileName(argv[1]);
 
-  reader->Update();
-
-
- 
-
-  vtkSmartPointer<vtkImageViewer2> imageViewer =
-
-  vtkSmartPointer<vtkImageViewer2>::New();
-
-  vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = 
-  vtkSmartPointer<vtkRenderWindowInteractor>::New();
-
-  imageViewer->SetInputConnection(reader->GetOutputPort());
-  
-  imageViewer->SetupInteractor(renderWindowInteractor);
-
-  imageViewer->SetColorLevel(500);
-
-  imageViewer->SetColorWindow(2000);
-
-  imageViewer->SetSlice(50);
-
-  imageViewer->SetSliceOrientationToXY();
-
-  imageViewer->Render();
-
-  renderWindowInteractor->UpdateSize(500,500);
-
-  vtkSmartPointer<MouseInteractorStyle3> style =
-  vtkSmartPointer<MouseInteractorStyle3>::New();
-  renderWindowInteractor->SetInteractorStyle( style );
-
-  renderWindowInteractor->Initialize();
+	reader->Update();
 
 
-  renderWindowInteractor->Start();
 
-  return  EXIT_SUCCESS ;
+
+	vtkSmartPointer<vtkImageViewer2> imageViewer =
+
+	vtkSmartPointer<vtkImageViewer2>::New();
+
+	vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = 
+	vtkSmartPointer<vtkRenderWindowInteractor>::New();
+
+	imageViewer->SetInputConnection(reader->GetOutputPort());
+
+	imageViewer->SetupInteractor(renderWindowInteractor);
+
+	imageViewer->SetColorLevel(500);
+
+	imageViewer->SetColorWindow(2000);
+
+	do{
+
+	std::cout << "Slices range (z-coord): " << imageViewer->GetSliceMin() << " ~ " << imageViewer->GetSliceMax() << endl;
+	std::cout << "Please select a slice to view (-1 to exit)\n";
+
+
+	std::cin >> z;
+
+		//std::cout <<"z = "<< z <<endl;
+
+	if(z < imageViewer->GetSliceMin() || z > imageViewer->GetSliceMax()) {
+		std::cerr << "Out of bounds!\n";
+		return EXIT_FAILURE;
+	}
+
+	imageViewer->SetSlice(z);
+
+	imageViewer->SetSliceOrientationToXY();
+
+	imageViewer->Render();
+
+	//renderWindowInteractor->UpdateSize(500,500);
+
+	vtkSmartPointer<MouseInteractorStyle3> style =
+	vtkSmartPointer<MouseInteractorStyle3>::New();
+	renderWindowInteractor->SetInteractorStyle( style );
+	renderWindowInteractor->Start();
+
+	}while(z >= 0);
+	//renderWindowInteractor->Initialize();
+
+
+	//renderWindowInteractor->Start();
+
+		return  EXIT_SUCCESS ;
 }
