@@ -9,6 +9,8 @@ file( GLOB LIB_SOURCES lib/*.cpp )
 file( GLOB LIB_HEADERS lib/*.h )
 add_library( YourLib ${LIB_SOURCES} ${LIB_HEADERS} )
 
+add_library(RegionGrowingNoThreshold lib/RegionGrowingNoThreshold.cxx lib/RegionGrowingNoThreshold.h)
+
 add_executable(FinalProject MACOSX_BUNDLE FinalProject)
 
 if(VTK_LIBRARIES)
@@ -29,4 +31,4 @@ include(${ITK_USE_FILE})
 #  set(Glue ItkVtkGlue)
 #endif()
  
-target_link_libraries( FinalProject YourLib ${VTK_LIBRARIES} ${ITK_LIBRARIES})
+target_link_libraries( FinalProject YourLib RegionGrowingNoThreshold ${VTK_LIBRARIES} ${ITK_LIBRARIES})
