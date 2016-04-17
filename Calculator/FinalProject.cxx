@@ -12,17 +12,25 @@
 #include <vtkRenderer.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkProperty.h>
+#include <vtkImageViewer2.h>
+#include <vtkInteractorStyleTrackballCamera.h>
+#include <vtkMetaImageReader.h>
+#include <vtkObjectFactory.h>
+
 
 #include "lib/scCalc.hh"
 #include "lib/Registration.hh"
 
 using namespace std;
 
+//seed coords
+int seedX, seedY, seedZ;
+
 //Helper funcion, ignore this
 vtkSmartPointer<vtkActor> makeLine(double data[][3], unsigned length, double color[3])
 {
   vtkSmartPointer<vtkPoints> points =
-    vtkSmartPointer<vtkPoints>::New();
+  vtkSmartPointer<vtkPoints>::New();
 
   for (int i = 0; i < length; ++i)
   {
@@ -30,45 +38,113 @@ vtkSmartPointer<vtkActor> makeLine(double data[][3], unsigned length, double col
   }
 
   vtkSmartPointer<vtkKochanekSpline> xSpline =
-    vtkSmartPointer<vtkKochanekSpline>::New();
+  vtkSmartPointer<vtkKochanekSpline>::New();
   vtkSmartPointer<vtkKochanekSpline> ySpline =
-    vtkSmartPointer<vtkKochanekSpline>::New();
+  vtkSmartPointer<vtkKochanekSpline>::New();
   vtkSmartPointer<vtkKochanekSpline> zSpline =
-    vtkSmartPointer<vtkKochanekSpline>::New();
+  vtkSmartPointer<vtkKochanekSpline>::New();
 
   vtkSmartPointer<vtkParametricSpline> spline =
-    vtkSmartPointer<vtkParametricSpline>::New();
+  vtkSmartPointer<vtkParametricSpline>::New();
   spline->SetXSpline(xSpline);
   spline->SetYSpline(ySpline);
   spline->SetZSpline(zSpline);
   spline->SetPoints(points);
 
   vtkSmartPointer<vtkParametricFunctionSource> functionSource =
-    vtkSmartPointer<vtkParametricFunctionSource>::New();
+  vtkSmartPointer<vtkParametricFunctionSource>::New();
   functionSource->SetParametricFunction(spline);
   functionSource->Update();
 
   // Setup actor and mapper
   vtkSmartPointer<vtkPolyDataMapper> mapper =
-    vtkSmartPointer<vtkPolyDataMapper>::New();
+  vtkSmartPointer<vtkPolyDataMapper>::New();
   mapper->SetInputConnection(functionSource->GetOutputPort());
 
   vtkSmartPointer<vtkActor> actor =
-    vtkSmartPointer<vtkActor>::New();
+  vtkSmartPointer<vtkActor>::New();
   actor->SetMapper(mapper);
   actor->GetProperty()->SetColor(color[0], color[1], color[2]); //(R,G,B)
 
   return actor;
 }
 
+//mouse event handler
+class MouseInteractorStyle3 : public vtkInteractorStyleTrackballCamera
+{
+public:
+  static MouseInteractorStyle3* New();
+
+  virtual void OnLeftButtonDown() 
+  {
+    
+    
+    seedX = this->Interactor->GetEventPosition()[0];
+    seedY = this->Interactor->GetEventPosition()[1];
+    std::cout << "Seed Choosen at: " << seedX << " " << seedY << std::endl;
+    std::cout << "Please close the window to continue...\n";
+
+  }
+
+};
+
+//for mouse event
+vtkStandardNewMacro(MouseInteractorStyle3);
+
 //This is the main method for the entire project, add your part here
-int main(int, char *argv[])
+int main(int argc, char *argv[])
 {
   //SEED INPUT GUI
   //TODO: Ken, your class should go here
   //The output should be a double[3]
+  if(argc < 2)
+  {
+    std::cerr << "Useage: " << argv[0] << " InputFile\n";
+    return EXIT_FAILURE;
+  }
 
-  double seed[3] = {0.0, 0.0, 0.0}; //Hardcoded seed to be used while ken is working on his GUI
+
+  //read input mhd file
+  vtkSmartPointer<vtkMetaImageReader>reader =
+  vtkSmartPointer<vtkMetaImageReader>::New();
+  reader->SetFileName(argv[1]);
+  reader->Update();
+
+  //display
+  vtkSmartPointer<vtkImageViewer2> imageViewer =
+  vtkSmartPointer<vtkImageViewer2>::New();
+  vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor2 = 
+  vtkSmartPointer<vtkRenderWindowInteractor>::New();
+  imageViewer->SetInputConnection(reader->GetOutputPort());
+  imageViewer->SetupInteractor(renderWindowInteractor2);
+  imageViewer->SetColorLevel(500);
+  imageViewer->SetColorWindow(2000);
+
+  //set z coord always the most center slice 
+  seedZ = (imageViewer->GetSliceMin() + imageViewer->GetSliceMax())/2;
+
+  imageViewer->SetSlice(seedZ);
+  imageViewer->SetSliceOrientationToXY();
+  imageViewer->Render();
+
+  //renderWindowInteractor->UpdateSize(500,500);
+
+  vtkSmartPointer<MouseInteractorStyle3> style =
+  vtkSmartPointer<MouseInteractorStyle3>::New();
+  renderWindowInteractor2->SetInteractorStyle(style);
+  renderWindowInteractor2->Start();
+
+
+
+
+  ////////////////////////////////////////////////////////////////////////////////////////////
+
+  double seed[3] = {seedX, seedY, seedZ};
+
+  //debug log
+  std::cout << "Seed Set at: " << seed[0] <<" "<< seed[1] <<" "<<seed[2] <<endl;
+
+   //Hardcoded seed to be used while ken is working on his GUI
 
   //SEGMENTATION
   //TODO: Marie, add a call to your segmentation class here
@@ -77,21 +153,21 @@ int main(int, char *argv[])
 
   //Hardcoded segmentation output
   double spiral[7][3] = {{0.0, 0.0, 0.0},
-                         {1.0, 1.0, 0.0},
-                         {0.5, 2.0, 1.0},
-                         {0.0, 3.0, 0.0},
-                         {1.0, 4.0, 0.0},
-                         {0.5, 5.0, 1.0},
-                         {0.0, 6.0, 0.0}};
+  {1.0, 1.0, 0.0},
+  {0.5, 2.0, 1.0},
+  {0.0, 3.0, 0.0},
+  {1.0, 4.0, 0.0},
+  {0.5, 5.0, 1.0},
+  {0.0, 6.0, 0.0}};
   unsigned spLength = 7;
 
   double spiral2[7][3] = {{0.0, 1.0, 0.0},
-                         {1.0, 2.0, 0.0},
-                         {0.5, 3.0, 1.0},
-                         {0.0, 4.0, 0.0},
-                         {1.0, 5.0, 0.0},
-                         {0.5, 6.0, 1.0},
-                         {0.0, 7.0, 0.0}};
+  {1.0, 2.0, 0.0},
+  {0.5, 3.0, 1.0},
+  {0.0, 4.0, 0.0},
+  {1.0, 5.0, 0.0},
+  {0.5, 6.0, 1.0},
+  {0.0, 7.0, 0.0}};
   unsigned spLength2 = 7;
 
 
@@ -99,7 +175,7 @@ int main(int, char *argv[])
   //TODO: Eric and Monte, change this to produce output!
   Registration *reg = new Registration();
   double trans[4][4]; // to be populated by registration algorithm
-	reg->rigidAlign(argv[1], argv[2], trans, 1);
+  reg->rigidAlign(argv[1], argv[2], trans, 1);
 
   //Hardcoded registration output
   // double trans[4][4] = {{1.0, 0.0, 0.0, 5},
@@ -126,12 +202,12 @@ int main(int, char *argv[])
 
   // Setup render window, renderer, and interactor
   vtkSmartPointer<vtkRenderer> renderer =
-    vtkSmartPointer<vtkRenderer>::New();
+  vtkSmartPointer<vtkRenderer>::New();
   vtkSmartPointer<vtkRenderWindow> renderWindow =
-    vtkSmartPointer<vtkRenderWindow>::New();
+  vtkSmartPointer<vtkRenderWindow>::New();
   renderWindow->AddRenderer(renderer);
   vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor =
-    vtkSmartPointer<vtkRenderWindowInteractor>::New();
+  vtkSmartPointer<vtkRenderWindowInteractor>::New();
   renderWindowInteractor->SetRenderWindow(renderWindow);
   renderer->AddActor(makeLine(calculator->spine1,calculator->spine1Length,color1));
   renderer->AddActor(makeLine(calculator->spine2,calculator->spine2Length,color2));
