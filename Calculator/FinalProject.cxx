@@ -151,6 +151,9 @@ int main(int argc, char *argv[])
   //Output should be a double[spine length][3]
   //Feel free to modify hardcoded seed if ken's is not done yet
 
+  RegionGrowingNoThreshold region_growing;
+  auto centroids = region_growing.GetCentroids(argv[1], seed[0], seed[1], seed[2]);
+  
   //Hardcoded segmentation output
   double spiral[7][3] = {{0.0, 0.0, 0.0},
   {1.0, 1.0, 0.0},
