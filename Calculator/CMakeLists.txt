@@ -13,6 +13,8 @@ add_library(RegionGrowingNoThreshold lib/RegionGrowingNoThreshold.cxx lib/Region
 
 add_executable(FinalProject MACOSX_BUNDLE FinalProject)
 
+add_definitions(-std=c++11)
+
 if(VTK_LIBRARIES)
   target_link_libraries(FinalProject ${VTK_LIBRARIES})
 else()

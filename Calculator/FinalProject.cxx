@@ -20,6 +20,7 @@
 
 #include "lib/scCalc.hh"
 #include "lib/Registration.hh"
+#include "lib/RegionGrowingNoThreshold.h"
 
 using namespace std;
 
