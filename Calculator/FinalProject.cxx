@@ -25,8 +25,8 @@
 using namespace std;
 
 //seed coords
-int seedX, seedY, seedZ;
-
+double seedX, seedY, seedZ;
+double seedX1, seedY1, seedZ1;
 //Helper funcion, ignore this
 vtkSmartPointer<vtkActor> makeLine(double data[][3], unsigned length, double color[3])
 {
@@ -98,9 +98,9 @@ int main(int argc, char *argv[])
   //SEED INPUT GUI
   //TODO: Ken, your class should go here
   //The output should be a double[3]
-  if(argc < 2)
+  if(argc < 3)
   {
-    std::cerr << "Useage: " << argv[0] << " InputFile\n";
+    std::cerr << "Useage: " << argv[0] << " InputFile1\n" << "InputFile2\n";
     return EXIT_FAILURE;
   }
 
@@ -135,12 +135,42 @@ int main(int argc, char *argv[])
   renderWindowInteractor2->SetInteractorStyle(style);
   renderWindowInteractor2->Start();
 
+  //read input mhd file
+  vtkSmartPointer<vtkMetaImageReader>reader1 =
+  vtkSmartPointer<vtkMetaImageReader>::New();
+  reader1->SetFileName(argv[2]);
+  reader1->Update();
 
+  //display
+  vtkSmartPointer<vtkImageViewer2> imageViewer1 =
+  vtkSmartPointer<vtkImageViewer2>::New();
+  vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor3 = 
+  vtkSmartPointer<vtkRenderWindowInteractor>::New();
+  imageViewer1->SetInputConnection(reader1->GetOutputPort());
+  imageViewer1->SetupInteractor(renderWindowInteractor3);
+  imageViewer1->SetColorLevel(500);
+  imageViewer1->SetColorWindow(2000);
 
+  //set z coord always the most center slice 
+  seedZ1 = (imageViewer1->GetSliceMin() + imageViewer1->GetSliceMax())/2;
+
+  imageViewer1->SetSlice(seedZ1);
+  imageViewer1->SetSliceOrientationToXY();
+  imageViewer1->Render();
+
+  //renderWindowInteractor->UpdateSize(500,500);
+
+  vtkSmartPointer<MouseInteractorStyle3> style1 =
+  vtkSmartPointer<MouseInteractorStyle3>::New();
+  renderWindowInteractor3->SetInteractorStyle(style1);
+  renderWindowInteractor3->Start();
+  
 
   ////////////////////////////////////////////////////////////////////////////////////////////
 
   double seed[3] = {seedX, seedY, seedZ};
+
+  double seed1[3] = {seedX1, seedY1, seedZ1};
 
   //debug log
   std::cout << "Seed Set at: " << seed[0] <<" "<< seed[1] <<" "<<seed[2] <<endl;
