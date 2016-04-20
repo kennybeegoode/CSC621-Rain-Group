@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
   //The output should be a double[3]
   if(argc < 3)
   {
-    std::cerr << "Useage: " << argv[0] << " InputFile1\n" << "InputFile2\n";
+    std::cerr << "Usage: " << argv[0] << " InputFile1\n" << "InputFile2\n";
     return EXIT_FAILURE;
   }
 
@@ -208,8 +208,8 @@ int main(int argc, char *argv[])
   //REGISTRATION
   //TODO: Eric and Monte, change this to produce output!
   Registration *reg = new Registration();
-  double trans[4][4]; // to be populated by registration algorithm
-  reg->rigidAlign(argv[1], argv[2], trans, 1);
+  //double trans[4][4]; // to be populated by registration algorithm
+  //reg->rigidAlign(argv[1], argv[2], trans, 1);
 
   //Hardcoded registration output
   // double trans[4][4] = {{1.0, 0.0, 0.0, 5},
@@ -219,15 +219,14 @@ int main(int argc, char *argv[])
   double trans2[4][4]; // to be populated by registration algorithm
   // run registration with default number of max optimizations (1)
   // test with 1 iteration of optimizer
-//  reg->affineAlign(argv[1], argv[2], trans2, 1);
-
+  reg->affineAlign(argv[1], argv[2], trans2, 1);
 
   ScCalc *calculator = new ScCalc();
   //FINAL RESULT CALCULATION
   //TODO: Juris will need to improve this to produce reasonable results
   calculator->loadSpine1(spiral, spLength);
   calculator->loadSpine2(spiral2, spLength2);
-  calculator->loadTransofrm(trans);
+  calculator->loadTransofrm(trans2);
   calculator->transformSpine1();
 
   //Set colors for spine
