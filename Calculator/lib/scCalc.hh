@@ -6,6 +6,7 @@
 #include <stdio.h> 
 #include <math.h>
 #include <iostream>
+#include <vector>
 
 //Spine Curvature Calculator
 class ScCalc
@@ -20,8 +21,11 @@ public:
     double (*spine2)[3];
     unsigned spine2Length;
     
+    void printVector(std::vector<std::vector<int> > vec);
     void loadSpine1(double spine[][3], unsigned length);
     void loadSpine2(double spine[][3], unsigned length);
+    void loadSpine1(std::vector<std::vector<int>> spine);
+    void loadSpine2(std::vector<std::vector<int>> spine);
     void loadTransofrm(double matrix[4][4]);
     void transformSpine1();
     void compareSpines();

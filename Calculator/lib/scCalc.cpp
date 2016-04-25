@@ -2,6 +2,64 @@
 
 using namespace std;
 
+void ScCalc::printVector(std::vector<std::vector<int> > vec)
+{
+  unsigned length = vec.size();
+  for (unsigned i = 0; i < length; ++i)
+  {
+      cout << "Point " << i << ": [";
+      for (unsigned j = 0; j < 3; ++j)
+      {
+          cout << vec[i][j];
+          if (j != 2) cout << ", ";
+      }
+      cout << "]" << endl;
+  }
+}
+
+void ScCalc::loadSpine1(vector<vector<int>> spine)
+{
+    unsigned length = spine.size();
+    double (*newSpine)[3] = new double[length][3];
+
+    for (unsigned i = 0; i < length; ++i)
+    {
+        for (unsigned j = 0; j < 3; ++j)
+        {
+            newSpine[i][j] = spine[i][j];
+        }
+    }
+
+    spine1 = newSpine; 
+    spine1Length = length;
+}
+
+void ScCalc::loadSpine2(vector<vector<int>> spine)
+{
+    unsigned length = spine.size();
+    double (*newSpine)[3] = new double[length][3];
+
+    for (unsigned i = 0; i < length; ++i)
+    {
+        for (unsigned j = 0; j < 3; ++j)
+        {
+            newSpine[i][j] = spine[i][j];
+        }
+    }
+    
+    spine2 = newSpine; 
+    spine2Length = length;
+}
+
+void ScCalc::loadSpine1(double spine[][3], unsigned length)
+{
+    loadSpineX(spine, length, 0);
+}
+void ScCalc::loadSpine2(double spine[][3], unsigned length)
+{
+    loadSpineX(spine, length, 1);
+}
+
 void ScCalc::loadSpineX(double spine[][3], unsigned length, unsigned spineNumber)
 {
     double (*newSpine)[3] = new double[length][3];
@@ -83,15 +141,6 @@ void ScCalc::printSpine1()
         }
         cout << endl;
     }
-}
-
-void ScCalc::loadSpine1(double spine[][3], unsigned length)
-{
-    loadSpineX(spine, length, 0);
-}
-void ScCalc::loadSpine2(double spine[][3], unsigned length)
-{
-    loadSpineX(spine, length, 1);
 }
 
 double ScCalc::firstDerivative(double a[5])

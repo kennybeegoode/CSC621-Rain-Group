@@ -26,7 +26,6 @@ using namespace std;
 
 //seed coords
 double seedX, seedY, seedZ;
-double seedX1, seedY1, seedZ1;
 //Helper funcion, ignore this
 vtkSmartPointer<vtkActor> makeLine(double data[][3], unsigned length, double color[3])
 {
@@ -78,13 +77,10 @@ public:
 
   virtual void OnLeftButtonDown() 
   {
-    
-    
     seedX = this->Interactor->GetEventPosition()[0];
     seedY = this->Interactor->GetEventPosition()[1];
     std::cout << "Seed Choosen at: " << seedX << " " << seedY << std::endl;
     std::cout << "Please close the window to continue...\n";
-
   }
 
 };
@@ -95,6 +91,7 @@ vtkStandardNewMacro(MouseInteractorStyle3);
 //This is the main method for the entire project, add your part here
 int main(int argc, char *argv[])
 {
+  ScCalc *calculator = new ScCalc();
   //SEED INPUT GUI
   //TODO: Ken, your class should go here
   //The output should be a double[3]
@@ -135,6 +132,8 @@ int main(int argc, char *argv[])
   renderWindowInteractor2->SetInteractorStyle(style);
   renderWindowInteractor2->Start();
 
+  double seed1[3] = {seedX, seedY, seedZ};
+
   //read input mhd file
   vtkSmartPointer<vtkMetaImageReader>reader1 =
   vtkSmartPointer<vtkMetaImageReader>::New();
@@ -152,9 +151,9 @@ int main(int argc, char *argv[])
   imageViewer1->SetColorWindow(2000);
 
   //set z coord always the most center slice 
-  seedZ1 = (imageViewer1->GetSliceMin() + imageViewer1->GetSliceMax())/2;
+  seedZ = (imageViewer1->GetSliceMin() + imageViewer1->GetSliceMax())/2;
 
-  imageViewer1->SetSlice(seedZ1);
+  imageViewer1->SetSlice(seedZ);
   imageViewer1->SetSliceOrientationToXY();
   imageViewer1->Render();
 
@@ -165,15 +164,14 @@ int main(int argc, char *argv[])
   renderWindowInteractor3->SetInteractorStyle(style1);
   renderWindowInteractor3->Start();
   
+  double seed2[3] = {seedX, seedY, seedZ};
 
   ////////////////////////////////////////////////////////////////////////////////////////////
 
-  double seed[3] = {seedX, seedY, seedZ};
-
-  double seed1[3] = {seedX1, seedY1, seedZ1};
-
+  
   //debug log
-  std::cout << "Seed Set at: " << seed[0] <<" "<< seed[1] <<" "<<seed[2] <<endl;
+  std::cout << "Seed1 Set at: " << seed1[0] <<" "<< seed1[1] <<" "<<seed1[2] <<endl;
+  std::cout << "Seed2 Set at: " << seed2[0] <<" "<< seed2[1] <<" "<<seed2[2] <<endl;
 
    //Hardcoded seed to be used while ken is working on his GUI
 
@@ -183,7 +181,10 @@ int main(int argc, char *argv[])
   //Feel free to modify hardcoded seed if ken's is not done yet
 
   RegionGrowingNoThreshold region_growing;
-  auto centroids = region_growing.GetCentroids(argv[1], seed[0], seed[1], seed[2]);
+  std::vector<std::vector<int>> centroids1 = region_growing.GetCentroids(argv[1], seed1[0], seed1[1], seed1[2]);
+  calculator->printVector(centroids1);
+  std::vector<std::vector<int>> centroids2 = region_growing.GetCentroids(argv[2], seed2[0], seed2[1], seed2[2]);
+  calculator->printVector(centroids2);
   
   //Hardcoded segmentation output
   double spiral[7][3] = {{0.0, 0.0, 0.0},
@@ -210,20 +211,18 @@ int main(int argc, char *argv[])
 
   double trans[4][4]; // to be populated by registration algorithm
   // test with 1 iteration of optimizer
-  reg->rigidAlign(argv[1], argv[2], trans, 1);
+  //reg->rigidAlign(argv[1], argv[2], trans, 1);
 
   double trans2[4][4];
   // test with 1 iteration of optimizer
-  reg->affineAlign(argv[1], argv[2], trans2, 1);
+  //reg->affineAlign(argv[1], argv[2], trans2, 1);
 
-
-  ScCalc *calculator = new ScCalc();
   //FINAL RESULT CALCULATION
   //TODO: Juris will need to improve this to produce reasonable results
-  calculator->loadSpine1(spiral, spLength);
-  calculator->loadSpine2(spiral2, spLength2);
-  calculator->loadTransofrm(trans2);
-  calculator->transformSpine1();
+  calculator->loadSpine1(centroids1);
+  calculator->loadSpine2(centroids2);
+  //calculator->loadTransofrm(trans2);
+  //calculator->transformSpine1();
 
   //Set colors for spine
   double color1[3] = {1, 0, 0};
