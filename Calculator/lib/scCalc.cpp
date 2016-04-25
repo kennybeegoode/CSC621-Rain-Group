@@ -26,7 +26,7 @@ void ScCalc::loadSpine1(vector<vector<int>> spine)
     {
         for (unsigned j = 0; j < 3; ++j)
         {
-            newSpine[i][j] = spine[i][j];
+            newSpine[i][j] = spacing1[j] * spine[i][j];
         }
     }
 
@@ -43,7 +43,7 @@ void ScCalc::loadSpine2(vector<vector<int>> spine)
     {
         for (unsigned j = 0; j < 3; ++j)
         {
-            newSpine[i][j] = spine[i][j];
+            newSpine[i][j] = spacing2[j] * spine[i][j];
         }
     }
     
@@ -63,12 +63,16 @@ void ScCalc::loadSpine2(double spine[][3], unsigned length)
 void ScCalc::loadSpineX(double spine[][3], unsigned length, unsigned spineNumber)
 {
     double (*newSpine)[3] = new double[length][3];
+    double* spacing;
+
+    if (!spineNumber) spacing = spacing1;
+    else spacing = spacing2;
 
     for (unsigned i = 0; i < length; ++i)
     {
         for (unsigned j = 0; j < 3; ++j)
         {
-            newSpine[i][j] = spine[i][j];
+            newSpine[i][j] = spacing[j] * spine[i][j];
         }
     }
 

@@ -17,9 +17,11 @@ private:
 public:
     double (*spine1)[3];
     unsigned spine1Length;
+    double* spacing1;
 
     double (*spine2)[3];
     unsigned spine2Length;
+    double* spacing2;
     
     void printVector(std::vector<std::vector<int> > vec);
     void loadSpine1(double spine[][3], unsigned length);

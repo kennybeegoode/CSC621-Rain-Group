@@ -92,6 +92,8 @@ vtkStandardNewMacro(MouseInteractorStyle3);
 int main(int argc, char *argv[])
 {
   ScCalc *calculator = new ScCalc();
+  double* spacing1;
+  double* spacing2;
   //SEED INPUT GUI
   //TODO: Ken, your class should go here
   //The output should be a double[3]
@@ -107,6 +109,7 @@ int main(int argc, char *argv[])
   vtkSmartPointer<vtkMetaImageReader>::New();
   reader->SetFileName(argv[1]);
   reader->Update();
+  spacing1 = reader->GetPixelSpacing();
 
   //display
   vtkSmartPointer<vtkImageViewer2> imageViewer =
@@ -139,6 +142,7 @@ int main(int argc, char *argv[])
   vtkSmartPointer<vtkMetaImageReader>::New();
   reader1->SetFileName(argv[2]);
   reader1->Update();
+  spacing2 = reader->GetPixelSpacing();
 
   //display
   vtkSmartPointer<vtkImageViewer2> imageViewer1 =
@@ -172,6 +176,8 @@ int main(int argc, char *argv[])
   //debug log
   std::cout << "Seed1 Set at: " << seed1[0] <<" "<< seed1[1] <<" "<<seed1[2] <<endl;
   std::cout << "Seed2 Set at: " << seed2[0] <<" "<< seed2[1] <<" "<<seed2[2] <<endl;
+  std::cout << "Spacing1 Set at: " << spacing1[0] << " " << spacing1[1] << " " << spacing1[2] <<endl;
+  std::cout << "Spacing2 Set at: " << spacing2[0] << " " << spacing2[1] << " " << spacing2[2] <<endl;
 
    //Hardcoded seed to be used while ken is working on his GUI
 
@@ -219,6 +225,8 @@ int main(int argc, char *argv[])
 
   //FINAL RESULT CALCULATION
   //TODO: Juris will need to improve this to produce reasonable results
+  calculator->spacing1 = spacing1;
+  calculator->spacing2 = spacing2;
   calculator->loadSpine1(centroids1);
   calculator->loadSpine2(centroids2);
   //calculator->loadTransofrm(trans2);
