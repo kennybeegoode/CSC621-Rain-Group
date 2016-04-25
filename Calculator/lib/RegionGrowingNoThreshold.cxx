@@ -1,3 +1,4 @@
+
 /*=========================================================================
  *
  *  Copyright Insight Software Consortium
@@ -24,8 +25,9 @@
 #include "itkImage.h"
 #include "itkCastImageFilter.h"
 #include "itkRGBPixel.h"
-#include "itkCurvatureFlowImageFilter.h"
-#include "itkBinomialBlurImageFilter.h"
+#include "itkLaplacianRecursiveGaussianImageFilter.h"
+#include "itkSubtractImageFilter.h"
+#include "itkCurvatureAnisotropicDiffusionImageFilter.h"
 #include "itkImageFileReader.h"
 #include "itkImageFileWriter.h"
 
@@ -101,8 +103,8 @@ void RegionGrowingNoThreshold::ComputeFinalThreshold(
   if (lower_dev == 0) lower_dev = 1;
   if (upper_dev == 0) upper_dev = 1;
 
-  *upper_threshold = mgv + (upper_dev * 3.0 * 2.58 + 20 / sqrt(region_points.size()));
-  *lower_threshold = mgv - (lower_dev * 3.0 * 2.58 + 20 / sqrt(region_points.size()));
+  *upper_threshold = mgv + (upper_dev * 3.5 * 2.58 + 20 / sqrt(region_points.size()));
+  *lower_threshold = mgv - (lower_dev * 3.5 * 2.58 + 20 / sqrt(region_points.size()));
 
   std::cout << "mgv " << mgv << " upper_dev " << upper_dev << " lower_dev " << lower_dev << std::endl;
   std::cout << "final thresholds " << *upper_threshold << " " << *lower_threshold << std::endl;
@@ -229,59 +231,80 @@ std::vector<std::vector<int>> RegionGrowingNoThreshold::ComputeCentroids(
           }
         }
       }
-      std::vector<int> coord;
-      coord.push_back(x_sum / num);
-      coord.push_back(y_sum / num);
-      centroids.push_back(coord);
+      if (x_sum !=0 && y_sum != 0) {
+        std::vector<int> coord;
+        coord.push_back(x_sum / num);
+        coord.push_back(y_sum / num);
+        coord.push_back(z);
+        centroids.push_back(coord);
+      }
   }
   return centroids;
 }
 
 std::vector<std::vector<int>> RegionGrowingNoThreshold::GetCentroids(char filename[], int seed_x, int seed_y, int seed_z) {
-    typedef  itk::ImageFileReader< InternalImageType > ReaderType;
-    ReaderType::Pointer reader = ReaderType::New();
-    reader->SetFileName(filename);
+  typedef  itk::ImageFileReader< InternalImageType > ReaderType;
+  typedef itk::CastImageFilter< InternalImageType, OutputImageType >
+                                                   CastingFilterType;
 
-    // Smoothing the image before appplying the region growing.
-    typedef itk::BinomialBlurImageFilter< InternalImageType, InternalImageType >
-       BinomialBlurImageFilterType;
-    BinomialBlurImageFilterType::Pointer smoothing =
-       BinomialBlurImageFilterType::New();
-    smoothing->SetInput(reader->GetOutput());
+  ReaderType::Pointer reader = ReaderType::New();
+  CastingFilterType::Pointer caster = CastingFilterType::New();
 
-    typedef itk::ConnectedThresholdImageFilter< InternalImageType,
-        InternalImageType > ConnectedFilterType;
-    ConnectedFilterType::Pointer connectedThreshold = ConnectedFilterType::New();
-    connectedThreshold->SetInput(smoothing->GetOutput());
-    smoothing->SetRepetitions(3);
+  reader->SetFileName( filename );
 
-    // The color we aregoing to paint the region with.
-    connectedThreshold->SetReplaceValue(255);
+  // Smoothing the image before appplying the region growing.
+  typedef itk::CurvatureAnisotropicDiffusionImageFilter< InternalImageType, InternalImageType >
+     CurvatureAnisotropicDiffusionImageFilterType;
+  CurvatureAnisotropicDiffusionImageFilterType::Pointer smoothing =
+     CurvatureAnisotropicDiffusionImageFilterType::New();
+  smoothing->SetNumberOfIterations(10);
+  smoothing->SetTimeStep(0.020);
+  smoothing->SetConductanceParameter(3);
 
-    InternalImageType::Pointer image = smoothing->GetOutput();
-    smoothing->Update();
+  typedef itk::LaplacianRecursiveGaussianImageFilter< InternalImageType, InternalImageType >
+    LaplacianRecursiveGaussianImageFilterType;
+  LaplacianRecursiveGaussianImageFilterType::Pointer laplacian =
+    LaplacianRecursiveGaussianImageFilterType::New();
 
-    // Setting up seeds.
-    InternalImageType::IndexType  index;
-    index[0] = seed_x;
-    index[1] = seed_y;
-    index[2] = seed_z;
-    connectedThreshold->SetSeed(index);
+  typedef itk::SubtractImageFilter<InternalImageType> SubtractImageFilterType;
+  SubtractImageFilterType::Pointer diff = SubtractImageFilterType::New();
 
-    double upper_threshold, lower_threshold;
-    GrowRegions(image, index, &upper_threshold, &lower_threshold);
+  smoothing->SetInput(reader->GetOutput());
+  laplacian->SetInput(smoothing->GetOutput());
+  diff->SetInput1(smoothing->GetOutput());
+  diff->SetInput2(laplacian->GetOutput());
 
-    connectedThreshold->SetLower(lower_threshold);
-    connectedThreshold->SetUpper(upper_threshold);
+  diff->Update();
+  InternalImageType::Pointer image = diff->GetOutput();
 
-    // Running all filters at once
-    try {
-       connectedThreshold->Update();
-    }
-    catch(itk::ExceptionObject & excep) {
-       std::cerr << "Exception caught !" << std::endl;
-       std::cerr << excep << std::endl;
-    }
-    image = connectedThreshold->GetOutput();
-    return ComputeCentroids(image);
+  typedef itk::ConnectedThresholdImageFilter< InternalImageType,
+       InternalImageType > ConnectedFilterType;
+  ConnectedFilterType::Pointer connectedThreshold = ConnectedFilterType::New();
+  // The color we are going to paint the region with.
+  connectedThreshold->SetReplaceValue(255);
+  // Setting up seeds.
+  InternalImageType::IndexType  index;
+  index[0] = seed_x;
+  index[1] = seed_y;
+  index[2] = seed_z;
+  connectedThreshold->SetSeed(index);
+
+  double upper_threshold, lower_threshold;
+  GrowRegions(image, index, &upper_threshold, &lower_threshold);
+
+  connectedThreshold->SetLower(lower_threshold);
+  connectedThreshold->SetUpper(upper_threshold);
+
+  connectedThreshold->SetInput(image);
+
+  // Running all filters at once
+  try {
+     connectedThreshold->Update();
+  }
+  catch(itk::ExceptionObject & excep) {
+     std::cerr << "Exception caught !" << std::endl;
+     std::cerr << excep << std::endl;
+  }
+  image = connectedThreshold->GetOutput();
+  return ComputeCentroids(image);
 }
