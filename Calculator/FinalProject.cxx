@@ -16,6 +16,7 @@
 #include <vtkInteractorStyleTrackballCamera.h>
 #include <vtkMetaImageReader.h>
 #include <vtkObjectFactory.h>
+#include <vtkResliceImageViewer.h>
 
 
 #include "lib/scCalc.hh"
@@ -112,59 +113,66 @@ int main(int argc, char *argv[])
   spacing1 = reader->GetPixelSpacing();
 
   //display
-  vtkSmartPointer<vtkImageViewer2> imageViewer =
-  vtkSmartPointer<vtkImageViewer2>::New();
+  vtkSmartPointer<vtkResliceImageViewer> imageViewer =
+  vtkSmartPointer<vtkResliceImageViewer>::New();
   vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor2 = 
   vtkSmartPointer<vtkRenderWindowInteractor>::New();
   imageViewer->SetInputConnection(reader->GetOutputPort());
+  
   imageViewer->SetupInteractor(renderWindowInteractor2);
   imageViewer->SetColorLevel(500);
   imageViewer->SetColorWindow(2000);
 
   //set z coord always the most center slice 
-  seedZ = (imageViewer->GetSliceMin() + imageViewer->GetSliceMax())/2;
+  seedZ = (imageViewer->GetSliceMax())/2;
 
+  //imageViewer->SetSize(512,512);
   imageViewer->SetSlice(seedZ);
   imageViewer->SetSliceOrientationToXY();
   imageViewer->Render();
 
-  //renderWindowInteractor->UpdateSize(500,500);
+
 
   vtkSmartPointer<MouseInteractorStyle3> style =
   vtkSmartPointer<MouseInteractorStyle3>::New();
+  
   renderWindowInteractor2->SetInteractorStyle(style);
+  //renderWindowInteractor2->UpdateSize(100,100);
   renderWindowInteractor2->Start();
 
   double seed1[3] = {seedX, seedY, seedZ};
 
+
+  //////////////////////////////////////////////////////////////////////
   //read input mhd file
   vtkSmartPointer<vtkMetaImageReader>reader1 =
   vtkSmartPointer<vtkMetaImageReader>::New();
   reader1->SetFileName(argv[2]);
   reader1->Update();
-  spacing2 = reader->GetPixelSpacing();
+  spacing2 = reader1->GetPixelSpacing();
 
   //display
-  vtkSmartPointer<vtkImageViewer2> imageViewer1 =
-  vtkSmartPointer<vtkImageViewer2>::New();
+  vtkSmartPointer<vtkResliceImageViewer> imageViewer1 =
+  vtkSmartPointer<vtkResliceImageViewer>::New();
   vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor3 = 
   vtkSmartPointer<vtkRenderWindowInteractor>::New();
+
   imageViewer1->SetInputConnection(reader1->GetOutputPort());
   imageViewer1->SetupInteractor(renderWindowInteractor3);
   imageViewer1->SetColorLevel(500);
   imageViewer1->SetColorWindow(2000);
 
+
   //set z coord always the most center slice 
-  seedZ = (imageViewer1->GetSliceMin() + imageViewer1->GetSliceMax())/2;
+  seedZ = (imageViewer1->GetSliceMax())/2;
 
   imageViewer1->SetSlice(seedZ);
   imageViewer1->SetSliceOrientationToXY();
   imageViewer1->Render();
-
-  //renderWindowInteractor->UpdateSize(500,500);
-
+ 
   vtkSmartPointer<MouseInteractorStyle3> style1 =
   vtkSmartPointer<MouseInteractorStyle3>::New();
+ 
   renderWindowInteractor3->SetInteractorStyle(style1);
   renderWindowInteractor3->Start();
   
