@@ -1,4 +1,5 @@
 #include "Registration.hh" 
+#include <ctime>
 
 using namespace std;
 
@@ -36,8 +37,11 @@ public:
 void Registration::rigidAlign(string fixedImageInput, string movingImageInput, double transformParameters[][4], int maxNumberOfIterations) {
 
     std::cout << "Starting Rigid Alignment now with iterations:" << maxNumberOfIterations <<std::endl;
-    
-    const unsigned int                          Dimension = 3;
+
+    //Metrics for time
+    clock_t begin = clock();
+
+  const unsigned int                          Dimension = 3;
   typedef  float                              PixelType;
   typedef itk::Image< PixelType, Dimension >  FixedImageType;
   typedef itk::Image< PixelType, Dimension >  MovingImageType;
@@ -111,7 +115,7 @@ void Registration::rigidAlign(string fixedImageInput, string movingImageInput, d
   optimizerScales[4] = translationScale;
   optimizerScales[5] = translationScale;
   optimizer->SetScales( optimizerScales );
-  optimizer->SetNumberOfIterations( 1 );
+  optimizer->SetNumberOfIterations( maxNumberOfIterations );
   optimizer->SetLearningRate( 0.2 );
   optimizer->SetMinimumStepLength( 0.001 );
   optimizer->SetReturnBestParametersAndValue(true);
@@ -234,7 +238,10 @@ void Registration::rigidAlign(string fixedImageInput, string movingImageInput, d
 
   resampler->SetDefaultPixelValue( 1 );
 
+  clock_t end = clock();
+  double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
 
+  std::cout<<"The time elapsed is : " << elapsed_secs << std::endl;
 
 }
 
