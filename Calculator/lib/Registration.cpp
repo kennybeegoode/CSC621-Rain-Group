@@ -1,4 +1,4 @@
-#include "Registration.hh" 
+#include "Registration.hh"
 #include <ctime>
 
 using namespace std;
@@ -28,15 +28,15 @@ public:
       {
       return;
       }
-    std::cout << optimizer->GetCurrentIteration() << "   ";
-    std::cout << optimizer->GetValue() << "   ";
-    std::cout << optimizer->GetCurrentPosition() << std::endl;
+    cout << optimizer->GetCurrentIteration() << "   ";
+    cout << optimizer->GetValue() << "   ";
+    cout << optimizer->GetCurrentPosition() << endl;
     }
 };
 
 void Registration::rigidAlign(string fixedImageInput, string movingImageInput, double transformParameters[][4], int maxNumberOfIterations) {
 
-    std::cout << "Starting Rigid Alignment now with iterations:" << maxNumberOfIterations <<std::endl;
+    cout << "Starting Rigid Alignment now with iterations:" << maxNumberOfIterations <<endl;
 
     //Metrics for time
     clock_t begin = clock();
@@ -83,15 +83,15 @@ void Registration::rigidAlign(string fixedImageInput, string movingImageInput, d
     MovingImageType >  TransformInitializerType;
   TransformInitializerType::Pointer initializer =
     TransformInitializerType::New();
- 
+
   initializer->SetTransform(   initialTransform );
   initializer->SetFixedImage(  fixedImageReader->GetOutput() );
   initializer->SetMovingImage( movingImageReader->GetOutput() );
-  
+
   initializer->MomentsOn();
-  
+
   initializer->InitializeTransform();
-  
+
   typedef TransformType::VersorType  VersorType;
   typedef VersorType::VectorType     VectorType;
   VersorType     rotation;
@@ -102,12 +102,17 @@ void Registration::rigidAlign(string fixedImageInput, string movingImageInput, d
   const double angle = 0;
   rotation.Set(  axis, angle  );
   initialTransform->SetRotation( rotation );
- 
+
   registration->SetInitialTransform( initialTransform );
+
+  // set algorithmic parameters here; these could be passed as function
+  // arguments instead
+  const double translationScale = 1.0 / 1000.0;
+  double learningRate = 0.2;
+  double minStepLength = 0.001;
 
   typedef OptimizerType::ScalesType       OptimizerScalesType;
   OptimizerScalesType optimizerScales( initialTransform->GetNumberOfParameters() );
-  const double translationScale = 1.0 / 1000.0;
   optimizerScales[0] = 1.0;
   optimizerScales[1] = 1.0;
   optimizerScales[2] = 1.0;
@@ -116,9 +121,17 @@ void Registration::rigidAlign(string fixedImageInput, string movingImageInput, d
   optimizerScales[5] = translationScale;
   optimizer->SetScales( optimizerScales );
   optimizer->SetNumberOfIterations( maxNumberOfIterations );
-  optimizer->SetLearningRate( 0.2 );
-  optimizer->SetMinimumStepLength( 0.001 );
+  optimizer->SetLearningRate( learningRate );
+  optimizer->SetMinimumStepLength( minStepLength );
   optimizer->SetReturnBestParametersAndValue(true);
+
+  cout << endl << endl;
+  cout << "Parameters = " << endl;
+  cout << " optimizerScales  = " << optimizerScales << endl;
+  cout << " translationScale = " << translationScale << endl;
+  cout << " learningRate     = " << learningRate << endl;
+  cout << " minStepLength    = " << minStepLength << endl << endl;
+  cout << " Output from optimizer iterations:" << endl;
 
   CommandIterationUpdate::Pointer observer = CommandIterationUpdate::New();
   optimizer->AddObserver( itk::IterationEvent(), observer );
@@ -140,14 +153,14 @@ void Registration::rigidAlign(string fixedImageInput, string movingImageInput, d
   try
     {
     registration->Update();
-    std::cout << "Optimizer stop condition: "
+    cout << "Optimizer stop condition: "
               << registration->GetOptimizer()->GetStopConditionDescription()
-              << std::endl;
+              << endl;
     }
   catch( itk::ExceptionObject & err )
     {
-    std::cerr << "ExceptionObject caught !" << std::endl;
-    std::cerr << err << std::endl;
+    cerr << "ExceptionObject caught !" << endl;
+    cerr << err << endl;
     return;
     }
 
@@ -164,16 +177,16 @@ void Registration::rigidAlign(string fixedImageInput, string movingImageInput, d
   const double bestValue = optimizer->GetValue();
 
   // Print out results
-  std::cout << std::endl << std::endl;
-  std::cout << "Result = " << std::endl;
-  std::cout << " versor X      = " << versorX  << std::endl;
-  std::cout << " versor Y      = " << versorY  << std::endl;
-  std::cout << " versor Z      = " << versorZ  << std::endl;
-  std::cout << " Translation X = " << finalTranslationX  << std::endl;
-  std::cout << " Translation Y = " << finalTranslationY  << std::endl;
-  std::cout << " Translation Z = " << finalTranslationZ  << std::endl;
-  std::cout << " Iterations    = " << numberOfIterations << std::endl;
-  std::cout << " Metric value  = " << bestValue          << std::endl;
+  cout << endl << endl;
+  cout << "Result = " << endl;
+  cout << " versor X      = " << versorX  << endl;
+  cout << " versor Y      = " << versorY  << endl;
+  cout << " versor Z      = " << versorZ  << endl;
+  cout << " Translation X = " << finalTranslationX  << endl;
+  cout << " Translation Y = " << finalTranslationY  << endl;
+  cout << " Translation Z = " << finalTranslationZ  << endl;
+  cout << " Iterations    = " << numberOfIterations << endl;
+  cout << " Metric value  = " << bestValue          << endl;
 
   TransformType::Pointer finalTransform = TransformType::New();
 
@@ -182,8 +195,8 @@ void Registration::rigidAlign(string fixedImageInput, string movingImageInput, d
 
   TransformType::MatrixType matrix = finalTransform->GetMatrix();
   TransformType::OffsetType offset = finalTransform->GetOffset();
-  std::cout << "Matrix = " << std::endl << matrix << std::endl;
-  std::cout << "Offset = " << std::endl << offset << std::endl;
+  cout << endl << "Matrix = " << endl << matrix << endl;
+  cout << "Offset = " << offset << endl;
 
   typedef itk::ResampleImageFilter<
                             MovingImageType,
@@ -212,7 +225,7 @@ void Registration::rigidAlign(string fixedImageInput, string movingImageInput, d
 
   writer->SetFileName( "result.mhd" );
 
-  std::cout << "Set the resulting image as result.mhd" <<std::endl;
+  cout << "Set the resulting image as result.mhd" <<endl;
 
   caster->SetInput( resampler->GetOutput() );
   writer->SetInput( caster->GetOutput()   );
@@ -241,7 +254,7 @@ void Registration::rigidAlign(string fixedImageInput, string movingImageInput, d
   clock_t end = clock();
   double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
 
-  std::cout<<"The time elapsed is : " << elapsed_secs << std::endl;
+  cout<<"The time elapsed was: " << elapsed_secs << " ms" << endl;
 
 }
 
@@ -328,10 +341,10 @@ void Registration::affineAlign(string fixedImageInput, string movingImageInput,
     fixedImageSize = fixedImageReader->GetOutput()->GetLargestPossibleRegion().GetSize();
     movingImageSize = movingImageReader->GetOutput()->GetLargestPossibleRegion().GetSize();
 
-    std::cout << "dimensions of input images:\n";
-    std::cout << "   fixed  [x]:" << fixedImageSize[0] << " [y]:" << fixedImageSize[1]
+    cout << "dimensions of input images:\n";
+    cout << "   fixed  [x]:" << fixedImageSize[0] << " [y]:" << fixedImageSize[1]
             << " [z]:" << fixedImageSize[2] << "\n"; // dimensions of input 1
-    std::cout << "   moving [x]:" << movingImageSize[0] << " [y]:" << movingImageSize[1]
+    cout << "   moving [x]:" << movingImageSize[0] << " [y]:" << movingImageSize[1]
             << " [z]:" << movingImageSize[2] << "\n"; // dimensions of input 2
 
 	 //  In this example, we again use the
@@ -398,16 +411,16 @@ void Registration::affineAlign(string fixedImageInput, string movingImageInput,
     // method.
     try
     {
-        std::cout << "\nExecuting registration. This will take awhile."
-                << std::endl;
+        cout << "\nExecuting registration. This will take awhile."
+                << endl;
         registration->Update();
-        std::cout << "\nFinished registration.\nOptimizer stop condition: "
+        cout << "\nFinished registration.\nOptimizer stop condition: "
                 << registration->GetOptimizer()->GetStopConditionDescription()
-                << std::endl;
+                << endl;
     } catch (itk::ExceptionObject & err)
     {
-        std::cerr << "ExceptionObject caught !" << std::endl;
-        std::cerr << err << std::endl;
+        cerr << "ExceptionObject caught !" << endl;
+        cerr << err << endl;
         return;
     }
 
@@ -419,9 +432,9 @@ void Registration::affineAlign(string fixedImageInput, string movingImageInput,
     const double bestValue = optimizer->GetValue();
 
     // Print results
-    std::cout << "Result:" << std::endl;
-    std::cout << "   Iterations   = " << numberOfIterations << std::endl;
-    std::cout << "   Metric value = " << bestValue << std::endl;
+    cout << "Result:" << endl;
+    cout << "   Iterations   = " << numberOfIterations << endl;
+    cout << "   Metric value = " << bestValue << endl;
 
     // interpret final transformation parameters as 4x4 matrix
     // tokenize the parameters
