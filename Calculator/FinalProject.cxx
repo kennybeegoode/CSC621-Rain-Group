@@ -79,7 +79,6 @@ public:
   {
     seedX = this->Interactor->GetEventPosition()[0];
     seedY = this->Interactor->GetEventPosition()[1];
-    std::cout << "Seed Choosen at: " << seedX << " " << seedY << std::endl;
     std::cout << "Please close the window to continue...\n";
   }
 
@@ -129,6 +128,8 @@ int main(int argc, char *argv[])
   imageViewer->SetSliceOrientationToXY();
   imageViewer->Render();
 
+  seedZ = imageViewer->GetSlice();
+
   vtkSmartPointer<MouseInteractorStyle3> style =
   vtkSmartPointer<MouseInteractorStyle3>::New();
   
@@ -139,6 +140,8 @@ int main(int argc, char *argv[])
   seedZ = imageViewer->GetSlice();
 
   double seed1[3] = {seedX, seedY, seedZ};
+
+  std::cout << "Seed1 Set at: " << seed1[0] <<" "<< seed1[1] <<" "<<seed1[2] <<endl;
 
   //////////////////////////////////////////////////////////////////////
   //read input mhd file
@@ -165,6 +168,8 @@ int main(int argc, char *argv[])
   imageViewer1->SetSlice(seedZ);
   imageViewer1->SetSliceOrientationToXY();
   imageViewer1->Render();
+
+  
  
   vtkSmartPointer<MouseInteractorStyle3> style1 =
   vtkSmartPointer<MouseInteractorStyle3>::New();
@@ -176,11 +181,13 @@ int main(int argc, char *argv[])
   
   double seed2[3] = {seedX, seedY, seedZ};
 
+  std::cout << "Seed2 Set at: " << seed2[0] <<" "<< seed2[1] <<" "<<seed2[2] <<endl;
+
   ////////////////////////////////////////////////////////////////////////////////////////////
   
   //debug log
-  std::cout << "Seed1 Set at: " << seed1[0] <<" "<< seed1[1] <<" "<<seed1[2] <<endl;
-  std::cout << "Seed2 Set at: " << seed2[0] <<" "<< seed2[1] <<" "<<seed2[2] <<endl;
+  //std::cout << "Seed1 Set at: " << seed1[0] <<" "<< seed1[1] <<" "<<seed1[2] <<endl;
+  //std::cout << "Seed2 Set at: " << seed2[0] <<" "<< seed2[1] <<" "<<seed2[2] <<endl;
   std::cout << "Spacing1 Set at: " << spacing1[0] << " " << spacing1[1] << " " << spacing1[2] <<endl;
   std::cout << "Spacing2 Set at: " << spacing2[0] << " " << spacing2[1] << " " << spacing2[2] <<endl;
 
