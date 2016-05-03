@@ -103,114 +103,118 @@ int main(int argc, char *argv[])
     return EXIT_FAILURE;
   }
 
-  // //read input mhd file
-  // vtkSmartPointer<vtkMetaImageReader>reader =
-  // vtkSmartPointer<vtkMetaImageReader>::New();
-  // reader->SetFileName(argv[1]);
-  // reader->Update();
-  // spacing1 = reader->GetPixelSpacing();
+  //read input mhd file
+  vtkSmartPointer<vtkMetaImageReader>reader =
+  vtkSmartPointer<vtkMetaImageReader>::New();
+  reader->SetFileName(argv[1]);
+  reader->Update();
+  spacing1 = reader->GetPixelSpacing();
 
-  // //display
-  // vtkSmartPointer<vtkResliceImageViewer> imageViewer =
-  // vtkSmartPointer<vtkResliceImageViewer>::New();
-  // vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor2 = 
-  // vtkSmartPointer<vtkRenderWindowInteractor>::New();
-  // imageViewer->SetInputConnection(reader->GetOutputPort());
+  //display
+  vtkSmartPointer<vtkResliceImageViewer> imageViewer =
+  vtkSmartPointer<vtkResliceImageViewer>::New();
+  vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor2 = 
+  vtkSmartPointer<vtkRenderWindowInteractor>::New();
+  imageViewer->SetInputConnection(reader->GetOutputPort());
   
-  // imageViewer->SetupInteractor(renderWindowInteractor2);
-  // imageViewer->SetColorLevel(500);
-  // imageViewer->SetColorWindow(2000);
+  imageViewer->SetupInteractor(renderWindowInteractor2);
+  imageViewer->SetColorLevel(500);
+  imageViewer->SetColorWindow(2000);
 
-  // //set z coord always the most center slice 
-  // seedZ = (imageViewer->GetSliceMax())/2;
+  //set z coord always the most center slice 
+  seedZ = (imageViewer->GetSliceMax())/2;
 
-  // //imageViewer->SetSize(512,512);
-  // imageViewer->SetSlice(seedZ);
-  // imageViewer->SetSliceOrientationToXY();
-  // imageViewer->Render();
+  //imageViewer->SetSize(512,512);
+  imageViewer->SetSlice(seedZ);
+  imageViewer->SetSliceOrientationToXY();
+  imageViewer->Render();
 
-  // vtkSmartPointer<MouseInteractorStyle3> style =
-  // vtkSmartPointer<MouseInteractorStyle3>::New();
+  vtkSmartPointer<MouseInteractorStyle3> style =
+  vtkSmartPointer<MouseInteractorStyle3>::New();
   
-  // renderWindowInteractor2->SetInteractorStyle(style);
-  // //renderWindowInteractor2->UpdateSize(100,100);
-  // renderWindowInteractor2->Start();
+  renderWindowInteractor2->SetInteractorStyle(style);
+  //renderWindowInteractor2->UpdateSize(100,100);
+  renderWindowInteractor2->Start();
 
-  // double seed1[3] = {seedX, seedY, seedZ};
+  seedZ = imageViewer->GetSlice();
 
-  // //////////////////////////////////////////////////////////////////////
-  // //read input mhd file
-  // vtkSmartPointer<vtkMetaImageReader>reader1 =
-  // vtkSmartPointer<vtkMetaImageReader>::New();
-  // reader1->SetFileName(argv[2]);
-  // reader1->Update();
-  // spacing2 = reader1->GetPixelSpacing();
+  double seed1[3] = {seedX, seedY, seedZ};
 
-  // //display
-  // vtkSmartPointer<vtkResliceImageViewer> imageViewer1 =
-  // vtkSmartPointer<vtkResliceImageViewer>::New();
-  // vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor3 = 
-  // vtkSmartPointer<vtkRenderWindowInteractor>::New();
+  //////////////////////////////////////////////////////////////////////
+  //read input mhd file
+  vtkSmartPointer<vtkMetaImageReader>reader1 =
+  vtkSmartPointer<vtkMetaImageReader>::New();
+  reader1->SetFileName(argv[2]);
+  reader1->Update();
+  spacing2 = reader1->GetPixelSpacing();
 
-  // imageViewer1->SetInputConnection(reader1->GetOutputPort());
-  // imageViewer1->SetupInteractor(renderWindowInteractor3);
-  // imageViewer1->SetColorLevel(500);
-  // imageViewer1->SetColorWindow(2000);
+  //display
+  vtkSmartPointer<vtkResliceImageViewer> imageViewer1 =
+  vtkSmartPointer<vtkResliceImageViewer>::New();
+  vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor3 = 
+  vtkSmartPointer<vtkRenderWindowInteractor>::New();
 
-  // //set z coord always the most center slice 
-  // seedZ = (imageViewer1->GetSliceMax())/2;
+  imageViewer1->SetInputConnection(reader1->GetOutputPort());
+  imageViewer1->SetupInteractor(renderWindowInteractor3);
+  imageViewer1->SetColorLevel(500);
+  imageViewer1->SetColorWindow(2000);
 
-  // imageViewer1->SetSlice(seedZ);
-  // imageViewer1->SetSliceOrientationToXY();
-  // imageViewer1->Render();
+  //set z coord always the most center slice 
+  seedZ = (imageViewer1->GetSliceMax())/2;
+
+  imageViewer1->SetSlice(seedZ);
+  imageViewer1->SetSliceOrientationToXY();
+  imageViewer1->Render();
  
-  // vtkSmartPointer<MouseInteractorStyle3> style1 =
-  // vtkSmartPointer<MouseInteractorStyle3>::New();
+  vtkSmartPointer<MouseInteractorStyle3> style1 =
+  vtkSmartPointer<MouseInteractorStyle3>::New();
  
-  // renderWindowInteractor3->SetInteractorStyle(style1);
-  // renderWindowInteractor3->Start();
+  renderWindowInteractor3->SetInteractorStyle(style1);
+  renderWindowInteractor3->Start();
+
+  seedZ = imageViewer1->GetSlice();
   
-  // double seed2[3] = {seedX, seedY, seedZ};
+  double seed2[3] = {seedX, seedY, seedZ};
 
-  // ////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////
   
-  // //debug log
-  // std::cout << "Seed1 Set at: " << seed1[0] <<" "<< seed1[1] <<" "<<seed1[2] <<endl;
-  // std::cout << "Seed2 Set at: " << seed2[0] <<" "<< seed2[1] <<" "<<seed2[2] <<endl;
-  // std::cout << "Spacing1 Set at: " << spacing1[0] << " " << spacing1[1] << " " << spacing1[2] <<endl;
-  // std::cout << "Spacing2 Set at: " << spacing2[0] << " " << spacing2[1] << " " << spacing2[2] <<endl;
+  //debug log
+  std::cout << "Seed1 Set at: " << seed1[0] <<" "<< seed1[1] <<" "<<seed1[2] <<endl;
+  std::cout << "Seed2 Set at: " << seed2[0] <<" "<< seed2[1] <<" "<<seed2[2] <<endl;
+  std::cout << "Spacing1 Set at: " << spacing1[0] << " " << spacing1[1] << " " << spacing1[2] <<endl;
+  std::cout << "Spacing2 Set at: " << spacing2[0] << " " << spacing2[1] << " " << spacing2[2] <<endl;
 
-  // //Hardcoded seed to be used while ken is working on his GUI
+  //Hardcoded seed to be used while ken is working on his GUI
 
-  // //SEGMENTATION
-  // //TODO: Marie, add a call to your segmentation class here
-  // //Output should be a double[spine length][3]
-  // //Feel free to modify hardcoded seed if ken's is not done yet
+  //SEGMENTATION
+  //TODO: Marie, add a call to your segmentation class here
+  //Output should be a double[spine length][3]
+  //Feel free to modify hardcoded seed if ken's is not done yet
 
-  // RegionGrowingNoThreshold region_growing;
-  // std::vector<std::vector<int>> centroids1 = region_growing.GetCentroids(argv[1], seed1[0], seed1[1], seed1[2]);
-  // calculator->printVector(centroids1);
-  // std::vector<std::vector<int>> centroids2 = region_growing.GetCentroids(argv[2], seed2[0], seed2[1], seed2[2]);
-  // calculator->printVector(centroids2);
+  RegionGrowingNoThreshold region_growing;
+  std::vector<std::vector<int>> centroids1 = region_growing.GetCentroids(argv[1], seed1[0], seed1[1], seed1[2]);
+  calculator->printVector(centroids1);
+  std::vector<std::vector<int>> centroids2 = region_growing.GetCentroids(argv[2], seed2[0], seed2[1], seed2[2]);
+  calculator->printVector(centroids2);
   
-  // //Hardcoded segmentation output
-  // double spiral[7][3] = {{0.0, 0.0, 0.0},
-  // {1.0, 1.0, 0.0},
-  // {0.5, 2.0, 1.0},
-  // {0.0, 3.0, 0.0},
-  // {1.0, 4.0, 0.0},
-  // {0.5, 5.0, 1.0},
-  // {0.0, 6.0, 0.0}};
-  // unsigned spLength = 7;
+  //Hardcoded segmentation output
+  double spiral[7][3] = {{0.0, 0.0, 0.0},
+  {1.0, 1.0, 0.0},
+  {0.5, 2.0, 1.0},
+  {0.0, 3.0, 0.0},
+  {1.0, 4.0, 0.0},
+  {0.5, 5.0, 1.0},
+  {0.0, 6.0, 0.0}};
+  unsigned spLength = 7;
 
-  // double spiral2[7][3] = {{0.0, 1.0, 0.0},
-  // {1.0, 2.0, 0.0},
-  // {0.5, 3.0, 1.0},
-  // {0.0, 4.0, 0.0},
-  // {1.0, 5.0, 0.0},
-  // {0.5, 6.0, 1.0},
-  // {0.0, 7.0, 0.0}};
-  // unsigned spLength2 = 7;
+  double spiral2[7][3] = {{0.0, 1.0, 0.0},
+  {1.0, 2.0, 0.0},
+  {0.5, 3.0, 1.0},
+  {0.0, 4.0, 0.0},
+  {1.0, 5.0, 0.0},
+  {0.5, 6.0, 1.0},
+  {0.0, 7.0, 0.0}};
+  unsigned spLength2 = 7;
 
   //REGISTRATION
   Registration *reg = new Registration();
