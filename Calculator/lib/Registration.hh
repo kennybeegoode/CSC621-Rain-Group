@@ -32,6 +32,18 @@
 #include "itkRegularStepGradientDescentOptimizerv4.h"
 #include "itkExtractImageFilter.h"
 
+//3D Multi Res Image Registration
+#include "itkMultiResolutionImageRegistrationMethod.h"
+#include "itkTranslationTransform.h"
+#include "itkMattesMutualInformationImageToImageMetric.h"
+#include "itkRegularStepGradientDescentOptimizer.h"
+#include "itkImage.h"
+#include "itkImageFileReader.h"
+#include "itkImageFileWriter.h"
+#include "itkResampleImageFilter.h"
+#include "itkCastImageFilter.h"
+#include "itkCheckerBoardImageFilter.h"
+
 #include <fstream>
 #include "stdint.h"
 #include <string>
@@ -49,6 +61,7 @@
 class Registration
 {
 public:
+	void multiResRegistration(std::string fixedImageInput, std::string movingImageInput, double transformParameters[][4], int maxNumberOfIterations);
 	void rigidAlign(std::string fixedImageInput, std::string movingImageInput, double transformParameters[][4], int maxNumberOfIterations);
 	void affineAlign(std::string fixedImageInput, std::string movingImageInput,
 			double transformParameters[][4]);

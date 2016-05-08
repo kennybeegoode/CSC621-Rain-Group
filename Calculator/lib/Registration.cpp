@@ -3,40 +3,239 @@
 
 using namespace std;
 
+template <typename TRegistration>
+
+class RegistrationInterfaceCommand : public itk::Command
+{
+public:
+  typedef  RegistrationInterfaceCommand   Self;
+  typedef  itk::Command                   Superclass;
+  typedef  itk::SmartPointer<Self>        Pointer;
+  itkNewMacro( Self );
+protected:
+  RegistrationInterfaceCommand() {};
+public:
+  typedef   TRegistration                              RegistrationType;
+  typedef   RegistrationType *                         RegistrationPointer;
+  typedef   itk::RegularStepGradientDescentOptimizer   OptimizerType;
+  typedef   OptimizerType *                            OptimizerPointer;
+  void Execute(itk::Object * object, const itk::EventObject & event) ITK_OVERRIDE
+    {
+    if( !(itk::IterationEvent().CheckEvent( &event )) )
+      {
+      return;
+      }
+    RegistrationPointer registration = static_cast<RegistrationPointer>( object );
+    if(registration == ITK_NULLPTR)
+      {
+      return;
+      }
+    OptimizerPointer optimizer = static_cast< OptimizerPointer >(registration->GetModifiableOptimizer() );
+    std::cout << "-------------------------------------" << std::endl;
+    std::cout << "MultiResolution Level : "
+              << registration->GetCurrentLevel()  << std::endl;
+    std::cout << std::endl;
+    if ( registration->GetCurrentLevel() == 0 )
+      {
+      optimizer->SetMaximumStepLength( 16.00 );
+      optimizer->SetMinimumStepLength( 0.01 );
+      }
+    else
+      {
+      optimizer->SetMaximumStepLength( optimizer->GetMaximumStepLength() / 4.0 );
+      optimizer->SetMinimumStepLength( optimizer->GetMinimumStepLength() / 10.0 );
+      }
+    }
+  void Execute(const itk::Object * , const itk::EventObject & ) ITK_OVERRIDE
+    { return; }
+};
+
+
+//  The following section of code implements an observer
+//  that will monitor the evolution of the registration process.
+//
 class CommandIterationUpdate : public itk::Command
 {
 public:
   typedef  CommandIterationUpdate   Self;
   typedef  itk::Command             Superclass;
-  typedef itk::SmartPointer<Self>   Pointer;
+  typedef  itk::SmartPointer<Self>  Pointer;
   itkNewMacro( Self );
-
 protected:
   CommandIterationUpdate() {};
-
 public:
-  typedef itk::RegularStepGradientDescentOptimizerv4<double>  OptimizerType;
-  typedef   const OptimizerType *                             OptimizerPointer;
+  typedef   itk::RegularStepGradientDescentOptimizer OptimizerType;
+  typedef   const OptimizerType *                    OptimizerPointer;
   void Execute(itk::Object *caller, const itk::EventObject & event) ITK_OVERRIDE
     {
-    Execute( (const itk::Object *)caller, event);
+      Execute( (const itk::Object *)caller, event);
     }
   void Execute(const itk::Object * object, const itk::EventObject & event) ITK_OVERRIDE
     {
-    OptimizerPointer optimizer = static_cast< OptimizerPointer >( object );
-    if( ! itk::IterationEvent().CheckEvent( &event ) )
-      {
-      return;
-      }
-    cout << optimizer->GetCurrentIteration() << "   ";
-    cout << optimizer->GetValue() << "   ";
-    cout << optimizer->GetCurrentPosition() << endl;
+      OptimizerPointer optimizer = static_cast< OptimizerPointer >( object );
+      if( !(itk::IterationEvent().CheckEvent( &event )) )
+        {
+        return;
+        }
+      std::cout << optimizer->GetCurrentIteration() << "   ";
+      std::cout << optimizer->GetValue() << "   ";
+      std::cout << optimizer->GetCurrentPosition() << std::endl;
     }
 };
+
+void Registration::multiResRegistration(string fixedImageInput, string movingImageInput, double transformParameters[][4], int maxNumberOfIterations) {
+
+  cout<<"Working on multi-res image registration."<<endl;
+  cout<<"Please wait.. program will display out soon." <<endl;
+  cout<<"Fixed image input file: " << fixedImageInput <<endl;
+  cout<<"Moving image input file: " << fixedImageInput <<endl;
+
+  const    unsigned int    Dimension = 3;
+  typedef  unsigned short  PixelType;
+  typedef itk::Image< PixelType, Dimension >  FixedImageType;
+  typedef itk::Image< PixelType, Dimension >  MovingImageType;
+  typedef   float                                    InternalPixelType;
+  typedef itk::Image< InternalPixelType, Dimension > InternalImageType;
+  typedef itk::TranslationTransform< double, Dimension > TransformType;
+  typedef itk::RegularStepGradientDescentOptimizer       OptimizerType;
+  typedef itk::LinearInterpolateImageFunction<
+                                    InternalImageType,
+                                    double             > InterpolatorType;
+  typedef itk::MattesMutualInformationImageToImageMetric<
+                                    InternalImageType,
+                                    InternalImageType >   MetricType;
+  typedef itk::MultiResolutionImageRegistrationMethod<
+                                    InternalImageType,
+                                    InternalImageType >   RegistrationType;
+  typedef itk::MultiResolutionPyramidImageFilter<
+                                    InternalImageType,
+                                    InternalImageType >   FixedImagePyramidType;
+  typedef itk::MultiResolutionPyramidImageFilter<
+                                    InternalImageType,
+                                    InternalImageType >   MovingImagePyramidType;
+  //  All the components are instantiated using their \code{New()} method
+  //  and connected to the registration object as in previous example.
+  //
+  TransformType::Pointer      transform     = TransformType::New();
+  OptimizerType::Pointer      optimizer     = OptimizerType::New();
+  InterpolatorType::Pointer   interpolator  = InterpolatorType::New();
+  RegistrationType::Pointer   registration  = RegistrationType::New();
+  MetricType::Pointer         metric        = MetricType::New();
+  FixedImagePyramidType::Pointer fixedImagePyramid =
+      FixedImagePyramidType::New();
+  MovingImagePyramidType::Pointer movingImagePyramid =
+      MovingImagePyramidType::New();
+  registration->SetOptimizer(     optimizer     );
+  registration->SetTransform(     transform     );
+  registration->SetInterpolator(  interpolator  );
+  registration->SetMetric( metric  );
+  registration->SetFixedImagePyramid( fixedImagePyramid );
+  registration->SetMovingImagePyramid( movingImagePyramid );
+  typedef itk::ImageFileReader< FixedImageType  > FixedImageReaderType;
+  typedef itk::ImageFileReader< MovingImageType > MovingImageReaderType;
+  FixedImageReaderType::Pointer  fixedImageReader  = FixedImageReaderType::New();
+  MovingImageReaderType::Pointer movingImageReader = MovingImageReaderType::New();
+  fixedImageReader->SetFileName(  fixedImageInput );
+  movingImageReader->SetFileName( movingImageInput );
+
+  typedef itk::CastImageFilter<
+                        FixedImageType, InternalImageType > FixedCastFilterType;
+  typedef itk::CastImageFilter<
+                        MovingImageType, InternalImageType > MovingCastFilterType;
+  FixedCastFilterType::Pointer fixedCaster   = FixedCastFilterType::New();
+  MovingCastFilterType::Pointer movingCaster = MovingCastFilterType::New();
+  fixedCaster->SetInput(  fixedImageReader->GetOutput() );
+  movingCaster->SetInput( movingImageReader->GetOutput() );
+  registration->SetFixedImage(    fixedCaster->GetOutput()    );
+  registration->SetMovingImage(   movingCaster->GetOutput()   );
+  fixedCaster->Update();
+  registration->SetFixedImageRegion(
+       fixedCaster->GetOutput()->GetBufferedRegion() );
+  typedef RegistrationType::ParametersType ParametersType;
+  ParametersType initialParameters( transform->GetNumberOfParameters() );
+  initialParameters[0] = 0.0;  // Initial offset in mm along X
+  initialParameters[1] = 0.0;  // Initial offset in mm along Y
+  initialParameters[2] = 0.0;  // Initial offset in mm along Z
+  registration->SetInitialTransformParameters( initialParameters );
+  metric->SetNumberOfHistogramBins( 128 );
+  metric->SetNumberOfSpatialSamples( 50000 );
+  metric->ReinitializeSeed( 76926294 );
+
+  optimizer->SetNumberOfIterations( 1 );
+  optimizer->SetRelaxationFactor( 0.9 );
+  // Create the Command observer and register it with the optimizer.
+  //
+  CommandIterationUpdate::Pointer observer = CommandIterationUpdate::New();
+  optimizer->AddObserver( itk::IterationEvent(), observer );
+  typedef RegistrationInterfaceCommand<RegistrationType> CommandType;
+  CommandType::Pointer command = CommandType::New();
+  registration->AddObserver( itk::IterationEvent(), command );
+  registration->SetNumberOfLevels( 3 );
+  try
+    {
+    registration->Update();
+    std::cout << "Optimizer stop condition: "
+              << registration->GetOptimizer()->GetStopConditionDescription()
+              << std::endl;
+    }
+  catch( itk::ExceptionObject & err )
+    {
+    std::cout << "ExceptionObject caught !" << std::endl;
+    std::cout << err << std::endl;
+    }
+
+  ParametersType finalParameters = registration->GetLastTransformParameters();
+  double TranslationAlongX = finalParameters[0];
+  double TranslationAlongY = finalParameters[1];
+  double TranslationAlongZ = finalParameters[2];
+  unsigned int numberOfIterations = optimizer->GetCurrentIteration();
+  double bestValue = optimizer->GetValue();
+  // Print out results
+  //
+  std::cout << "Result = " << std::endl;
+  std::cout << " Translation X = " << TranslationAlongX  << std::endl;
+  std::cout << " Translation Y = " << TranslationAlongY  << std::endl;
+  std::cout << " Translation Z = " << TranslationAlongZ  << std::endl;
+  std::cout << " Iterations    = " << numberOfIterations << std::endl;
+  std::cout << " Metric value  = " << bestValue          << std::endl;
+  typedef itk::ResampleImageFilter<
+                            MovingImageType,
+                            FixedImageType >    ResampleFilterType;
+  TransformType::Pointer finalTransform = TransformType::New();
+  finalTransform->SetParameters( finalParameters );
+  finalTransform->SetFixedParameters( transform->GetFixedParameters() );
+  ResampleFilterType::Pointer resample = ResampleFilterType::New();
+  resample->SetTransform( finalTransform );
+  resample->SetInput( movingImageReader->GetOutput() );
+  FixedImageType::Pointer fixedImage = fixedImageReader->GetOutput();
+  PixelType backgroundGrayLevel = 100;
+
+  resample->SetSize(    fixedImage->GetLargestPossibleRegion().GetSize() );
+  resample->SetOutputOrigin(  fixedImage->GetOrigin() );
+  resample->SetOutputSpacing( fixedImage->GetSpacing() );
+  resample->SetOutputDirection( fixedImage->GetDirection() );
+  resample->SetDefaultPixelValue( backgroundGrayLevel );
+  typedef  unsigned char  OutputPixelType;
+  typedef itk::Image< OutputPixelType, Dimension > OutputImageType;
+  typedef itk::CastImageFilter<
+                        FixedImageType,
+                        OutputImageType > CastFilterType;
+  typedef itk::ImageFileWriter< OutputImageType >  WriterType;
+  WriterType::Pointer      writer =  WriterType::New();
+  CastFilterType::Pointer  caster =  CastFilterType::New();
+  writer->SetFileName( "result-multi-res.mhd" );
+  cout << "Set the resulting image as result-multi-res.mhd" <<endl;
+  cout<<endl;
+  caster->SetInput( resample->GetOutput() );
+  writer->SetInput( caster->GetOutput()   );
+  writer->Update();
+}
 
 void Registration::rigidAlign(string fixedImageInput, string movingImageInput, double transformParameters[][4], int maxNumberOfIterations) {
 
     cout << "Starting Rigid Alignment now with iterations:" << maxNumberOfIterations <<endl;
+    cout<<"Fixed image input file: " << fixedImageInput <<endl;
+    cout<<"Moving image input file: " << fixedImageInput <<endl;
 
     //Metrics for time
     clock_t begin = clock();
@@ -223,9 +422,10 @@ void Registration::rigidAlign(string fixedImageInput, string movingImageInput, d
   WriterType::Pointer      writer =  WriterType::New();
   CastFilterType::Pointer  caster =  CastFilterType::New();
 
-  writer->SetFileName( "result.mhd" );
+  writer->SetFileName( "result-rigid-registration.mhd" );
 
-  cout << "Set the resulting image as result.mhd" <<endl;
+  cout << "Set the resulting image as result-rigid-registration.mhd" <<endl;
+  cout<<endl;
 
   caster->SetInput( resampler->GetOutput() );
   writer->SetInput( caster->GetOutput()   );
@@ -254,7 +454,7 @@ void Registration::rigidAlign(string fixedImageInput, string movingImageInput, d
   clock_t end = clock();
   double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
 
-  cout<<"The time elapsed was: " << elapsed_secs << " ms" << endl;
+  cout<<"The time elapsed was: " << elapsed_secs << " secs" << endl;
 
 }
 

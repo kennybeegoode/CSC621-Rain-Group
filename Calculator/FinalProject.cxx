@@ -169,8 +169,6 @@ int main(int argc, char *argv[])
   imageViewer1->SetSliceOrientationToXY();
   imageViewer1->Render();
 
-  
- 
   vtkSmartPointer<MouseInteractorStyle3> style1 =
   vtkSmartPointer<MouseInteractorStyle3>::New();
  
@@ -226,13 +224,15 @@ int main(int argc, char *argv[])
   //REGISTRATION
   Registration *reg = new Registration();
 
-  double trans[4][4]; // to be populated by registration algorithm
-  // test with 1 iteration of optimizer
-  reg->rigidAlign(argv[1], argv[2], trans, 1);
+  //Mutli Res Image Registration
+  double trans[4][4];
+  //test with 1 iteration of optimizer
+  reg->multiResRegistration(argv[1], argv[2], trans, 1);
 
-  double trans2[4][4];
+  //Rigid 3D Registration
+  double trans2[4][4]; // to be populated by registration algorithm
   // test with 1 iteration of optimizer
-  //reg->affineAlign(argv[1], argv[2], trans2, 1);
+  reg->rigidAlign(argv[1], argv[2], trans2, 1); 
 
   //FINAL RESULT CALCULATION
   //TODO: Juris will need to improve this to produce reasonable results
