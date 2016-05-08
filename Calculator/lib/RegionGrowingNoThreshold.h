@@ -30,7 +30,7 @@
 typedef   float           InternalPixelType;
 const     unsigned int    Dimension = 3;
 typedef itk::Image< InternalPixelType, Dimension >  InternalImageType;
-typedef unsigned char                            OutputPixelType;
+typedef float                           OutputPixelType;
 typedef itk::Image< OutputPixelType, Dimension > OutputImageType;
 
 class RegionGrowingNoThreshold {
@@ -45,14 +45,15 @@ class RegionGrowingNoThreshold {
                         double* upper_threshold, double* lower_threshold);
   void ComputeFinalThreshold(InternalImageType::Pointer& image,
                              std::unordered_map<long long, InternalImageType::IndexType>& region_points,
-                             double* upper_threshold, double* lower_threshold);
+                             double* upper_threshold, double* lower_threshold, double* upper_dev, double* lower_dev);
   long long ComputePointHash(InternalImageType::IndexType& point);
   bool CheckBounds(InternalImageType::IndexType& point,
                    InternalImageType::SizeType size);
-  void GrowRegions(InternalImageType::Pointer& image,
+  bool GrowRegions(InternalImageType::Pointer& image,
                    InternalImageType::IndexType& seed,
                    double* upper_threshold,
                    double* lower_threshold);
-  std::vector<std::vector<int>> ComputeCentroids(InternalImageType::Pointer& image);
+  std::vector<std::vector<int>> ComputeCentroids(InternalImageType::Pointer& image,
+    double* max_image_x_dist_ratio, double* max_image_y_dist_ratio, double* max_image_z_dist_ratio);
 
 };
