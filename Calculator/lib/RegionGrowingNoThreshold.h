@@ -54,6 +54,8 @@ class RegionGrowingNoThreshold {
                    double* upper_threshold,
                    double* lower_threshold);
   std::vector<std::vector<int>> ComputeCentroids(InternalImageType::Pointer& image,
-    double* max_image_x_dist_ratio, double* max_image_y_dist_ratio, double* max_image_z_dist_ratio);
+    double* max_image_x_dist_ratio, double* max_image_y_dist_ratio, double* max_image_z_dist_ratio, bool final);
+
+  void ComputePerSliceAvgAndDev(InternalImageType::Pointer& image, double* avg, double* dev);
 
 };
