@@ -220,9 +220,64 @@ bool RegionGrowingNoThreshold::GrowRegions(
   return true;
 }
 
+void RegionGrowingNoThreshold::ComputePerSliceAvgAndDev(InternalImageType::Pointer& image,
+  double* avg, double* dev) {
+  InternalImageType::RegionType region = image->GetLargestPossibleRegion();
+  InternalImageType::SizeType size = region.GetSize();
+  long long num_slices = 0;
+  std::cout << "avg start " << std::endl;
+  for (int z = 0; z < size[2]; z++) {
+    long long num_points = 0;
+    for (int x = 0; x < size[0]; x++) {
+      for (int y = 0; y < size[1]; y++) {
+        InternalImageType::IndexType pt;
+        pt[0] = x;
+        pt[1] = y;
+        pt[2] = z;
+        // Found a point which has pixel.
+        if (image->GetPixel(pt) > 0) {
+          num_points++;
+        }
+      }
+    }
+    if (num_points > 0) {
+      *avg += num_points;
+      num_slices++;
+    }
+  }
+  if (num_slices > 0) *avg /= num_slices;
+  std::cout << "avg end " << *avg << std::endl;
+
+  std::cout << "dev start " << std::endl;
+
+  for (int z = 0; z < size[2]; z++) {
+    long long num_points = 0;
+    for (int x = 0; x < size[0]; x++) {
+      for (int y = 0; y < size[1]; y++) {
+        InternalImageType::IndexType pt;
+        pt[0] = x;
+        pt[1] = y;
+        pt[2] = z;
+        // Found a point which has pixel.
+        if (image->GetPixel(pt) > 0) {
+          num_points++;
+        }
+      }
+    }
+    if (num_points > 0) {
+      *dev += (num_points - *avg) * (num_points - *avg);
+      num_slices++;
+    }
+  }
+  if (num_slices > 0) *dev = sqrt(*dev / num_slices);
+  std::cout << "dev end " << *dev << std::endl;
+
+}
+
+
 std::vector<std::vector<int>> RegionGrowingNoThreshold::ComputeCentroids(
   InternalImageType::Pointer& image, double* max_image_x_dist_ratio,
-  double* max_image_y_dist_ratio, double* max_image_z_dist_ratio) {
+  double* max_image_y_dist_ratio, double* max_image_z_dist_ratio, bool final) {
   std::vector<std::vector<int>> centroids;
   InternalImageType::RegionType region = image->GetLargestPossibleRegion();
   InternalImageType::SizeType size = region.GetSize();
@@ -230,6 +285,13 @@ std::vector<std::vector<int>> RegionGrowingNoThreshold::ComputeCentroids(
   *max_image_y_dist_ratio = -1;
   *max_image_z_dist_ratio = -1;
   long long z_max = -1, z_min = 100000;
+  double avg = 0, dev;
+  if (final) {
+    ComputePerSliceAvgAndDev(image, &avg, &dev);
+  } else {
+    dev = 100000000000;
+  }
+  // Running over all slices and x an y coordinates.
   for (int z = 0; z < size[2]; z++) {
       long long x_max = -1, x_min = 100000, y_max = -1, y_min = 100000;
       long long x_sum = 0, y_sum = 0;
@@ -240,6 +302,7 @@ std::vector<std::vector<int>> RegionGrowingNoThreshold::ComputeCentroids(
           pt[0] = x;
           pt[1] = y;
           pt[2] = z;
+          // Found a point which has pixel.
           if (image->GetPixel(pt) > 0) {
             x_max = MAX(x, x_max);
             x_min = MIN(x, x_min);
@@ -256,7 +319,9 @@ std::vector<std::vector<int>> RegionGrowingNoThreshold::ComputeCentroids(
           }
         }
       }
-      if (x_sum !=0 && y_sum != 0) {
+      // Compute centroid if number of points in the slice was non-zero and it falls
+      // within the deviation interval.
+      if (num != 0 && num < avg + 2 * dev && num > avg - 2 * dev) {
         std::vector<int> coord;
         coord.push_back(x_sum / num);
         coord.push_back(y_sum / num);
@@ -264,6 +329,7 @@ std::vector<std::vector<int>> RegionGrowingNoThreshold::ComputeCentroids(
         centroids.push_back(coord);
       }
   }
+
   *max_image_x_dist_ratio = *max_image_x_dist_ratio / size[0];
   *max_image_y_dist_ratio = *max_image_y_dist_ratio / size[1];
   *max_image_z_dist_ratio = *max_image_z_dist_ratio / size[2];
@@ -306,7 +372,7 @@ std::vector<std::vector<int>> RegionGrowingNoThreshold::GetCentroids(char filena
   diff->SetInput1(smoothing->GetOutput());
   diff->SetInput2(laplacian->GetOutput());
   reader->Update();
-  InternalImageType::Pointer image = reader->GetOutput();
+  InternalImageType::Pointer image = diff->GetOutput();
 
   //typedef  itk::ImageFileWriter<  OutputImageType  > WriterType;
   //WriterType::Pointer writer = WriterType::New();
@@ -343,7 +409,7 @@ std::vector<std::vector<int>> RegionGrowingNoThreshold::GetCentroids(char filena
         seed_copy[1] += j;
         seed_copy[2] += k;
         connectedThreshold->SetSeed(seed_copy);
-        InternalImageType::Pointer image = diff->GetOutput();
+        InternalImageType::Pointer image = reader->GetOutput();
 
         double upper_threshold, lower_threshold;
         // GrowRegions returning false means that deviation of points was too
@@ -352,7 +418,7 @@ std::vector<std::vector<int>> RegionGrowingNoThreshold::GetCentroids(char filena
         // when deviation is too big for all neighbors, we still produce some
         // output.
         if (!GrowRegions(image, seed_copy, &upper_threshold, &lower_threshold) &&
-            !(i == 3 && j == 3 && k == 3)){
+            !(i == 2 && j == 2 && k == 1)){
           continue;
         }
 
@@ -365,17 +431,20 @@ std::vector<std::vector<int>> RegionGrowingNoThreshold::GetCentroids(char filena
         double max_image_x_dist_ratio, max_image_y_dist_ratio,
             max_image_z_dist_ratio;
         ComputeCentroids(image, &max_image_x_dist_ratio, &max_image_y_dist_ratio,
-                         &max_image_z_dist_ratio);
+                         &max_image_z_dist_ratio, false);
         // If we don't have oversegmentation, we check if it is the longest
         // segment we ever saw and if it is the case record the shift values
         if ((max_image_x_dist_ratio <= 0.33 && max_image_y_dist_ratio <= 0.33 &&
-            max_image_z_dist_ratio >= 0.6) || (i == 3 && j == 3 && k == 3)) {
+            max_image_z_dist_ratio >= 0.6) || (i == 2 && j == 2 && k == 1)) {
           std::cout << "break" << std::endl;
           if (max_image_z_dist_ratio > z_max) {
             z_max = max_image_z_dist_ratio;
             i_max = i;
             j_max = j;
             k_max = k;
+            i = 2;
+            j = 2;
+            k = 1;
           }
         }
       }
@@ -407,5 +476,5 @@ std::vector<std::vector<int>> RegionGrowingNoThreshold::GetCentroids(char filena
 
   image = connectedThreshold->GetOutput();
   return ComputeCentroids(image, &max_image_x_dist_ratio, &max_image_y_dist_ratio,
-    &max_image_z_dist_ratio);
+    &max_image_z_dist_ratio, true);
 }
