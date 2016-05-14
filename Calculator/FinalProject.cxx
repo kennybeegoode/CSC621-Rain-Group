@@ -21,11 +21,18 @@
 #include "lib/scCalc.hh"
 #include "lib/Registration.hh"
 #include "lib/RegionGrowingNoThreshold.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <dirent.h>
 
 using namespace std;
 
 //seed coords
 double seedX, seedY, seedZ;
+bool useDatabase = false;
+bool newFile1 = true;
+bool newFile2 = true;
 //Helper funcion, ignore this
 vtkSmartPointer<vtkActor> makeLine(double data[][3], unsigned length, double color[3])
 {
@@ -102,6 +109,19 @@ int main(int argc, char *argv[])
     return EXIT_FAILURE;
   }
 
+  //Hidden parameter -d allows the program to use pre-calculated data
+  if(argc > 3)
+  {
+    for (int i = 3; i < argc; i++)
+    {
+      if (strcmp(argv[i], "-d") == 0)
+      {
+        useDatabase = true;
+        std::cout << "-d Recognized" <<endl;
+      }
+    }
+  }
+
   //read input mhd file
   vtkSmartPointer<vtkMetaImageReader>reader =
   vtkSmartPointer<vtkMetaImageReader>::New();
@@ -144,6 +164,7 @@ int main(int argc, char *argv[])
   std::cout << "Seed1 Set at: " << seed1[0] <<" "<< seed1[1] <<" "<<seed1[2] <<endl;
 
   //////////////////////////////////////////////////////////////////////
+
   //read input mhd file
   vtkSmartPointer<vtkMetaImageReader>reader1 =
   vtkSmartPointer<vtkMetaImageReader>::New();
@@ -184,22 +205,95 @@ int main(int argc, char *argv[])
   ////////////////////////////////////////////////////////////////////////////////////////////
   
   //debug log
-  //std::cout << "Seed1 Set at: " << seed1[0] <<" "<< seed1[1] <<" "<<seed1[2] <<endl;
-  //std::cout << "Seed2 Set at: " << seed2[0] <<" "<< seed2[1] <<" "<<seed2[2] <<endl;
   std::cout << "Spacing1 Set at: " << spacing1[0] << " " << spacing1[1] << " " << spacing1[2] <<endl;
   std::cout << "Spacing2 Set at: " << spacing2[0] << " " << spacing2[1] << " " << spacing2[2] <<endl;
 
-  //Hardcoded seed to be used while ken is working on his GUI
+  //Check if files are in database
+  DIR* dataFolder;
+  struct stat st = {0};
+
+  if (useDatabase)
+  {
+    if (stat("preComputedData", &st) == -1) 
+    {
+      mkdir("preComputedData", 0700);
+    }
+
+    dataFolder = opendir("preComputedData");
+
+    struct dirent *ent; 
+    while((ent = readdir(dataFolder)) != NULL) 
+    { 
+      if (strcmp(argv[1], ent->d_name) == 0)
+      {
+        newFile1 = false;
+        std::cout << "File 1: " << argv[1] << " found in database." << endl;
+      }
+
+      if (strcmp(argv[2], ent->d_name) == 0) 
+      {
+        newFile2 = false;
+        std::cout << "File 2: " << argv[2] << " found in database." << endl;
+      }
+    } 
+
+  }
 
   //SEGMENTATION
-  //TODO: Marie, add a call to your segmentation class here
-  //Output should be a double[spine length][3]
-  //Feel free to modify hardcoded seed if ken's is not done yet
-
+  std::vector<std::vector<int>> centroids1;
+  std::vector<std::vector<int>> centroids2;
   RegionGrowingNoThreshold region_growing;
-  std::vector<std::vector<int>> centroids1 = region_growing.GetCentroids(argv[1], seed1[0], seed1[1], seed1[2]);
+
+  char* fullName1;
+  fullName1 = (char*)malloc(strlen(argv[1]) + 18 + 1);
+  strcpy(fullName1, "./preComputedData/");
+  strcat(fullName1, argv[1]);
+
+  char* fullName2;
+  fullName2 = (char*)malloc(strlen(argv[2]) + 18 + 1);
+  strcpy(fullName2, "./preComputedData/");
+  strcat(fullName2, argv[2]);
+
+  if (useDatabase && !newFile1)
+  {
+    //Load from database
+    centroids1 = calculator->loadVector(fullName1);
+    std::cout << "IMAGE1 LOADED FROM DATABASE..." <<endl;
+  }
+  else
+  {
+    //Calculate fresh
+    std::cout << "CALCULATING SEGMENTATION IMAGE1..." <<endl;
+    centroids1 = region_growing.GetCentroids(argv[1], seed1[0], seed1[1], seed1[2]);
+    std::cout << "IMAGE1 SEGMENTATION COMPLETE" <<endl;
+
+    if (useDatabase)
+    {
+      calculator->saveVector(centroids1, fullName1);
+    }
+  }
+
+
+  if (useDatabase && !newFile2)
+  {
+    //Load from database
+    centroids2 = calculator->loadVector(fullName2);
+    std::cout << "IMAGE2 LOADED FROM DATABASE..." <<endl;
+  }
+  else
+  {
+    //Calculate fresh
+    std::cout << "CALCULATING SEGMENTATION IMAGE2..." <<endl;
+    centroids2 = region_growing.GetCentroids(argv[2], seed2[0], seed2[1], seed2[2]);
+    std::cout << "IMAGE2 SEGMENTATION COMPLETE" <<endl;
+
+    if (useDatabase)
+    {
+      calculator->saveVector(centroids2, fullName2);
+    }
+  }
+
   calculator->printVector(centroids1);
-  std::vector<std::vector<int>> centroids2 = region_growing.GetCentroids(argv[2], seed2[0], seed2[1], seed2[2]);
   calculator->printVector(centroids2);
   
   //Hardcoded segmentation output
@@ -227,41 +321,41 @@ int main(int argc, char *argv[])
   //Mutli Res Image Registration
   double trans[4][4];
   //test with 1 iteration of optimizer
-  reg->multiResRegistration(argv[1], argv[2], trans, 1);
+  //reg->multiResRegistration(argv[1], argv[2], trans, 1);
 
   //Rigid 3D Registration
   double trans2[4][4]; // to be populated by registration algorithm
   // test with 1 iteration of optimizer
-  reg->rigidAlign(argv[1], argv[2], trans2, 1); 
+  //reg->rigidAlign(argv[1], argv[2], trans2, 1); 
 
   //FINAL RESULT CALCULATION
   //TODO: Juris will need to improve this to produce reasonable results
-  // calculator->spacing1 = spacing1;
-  // calculator->spacing2 = spacing2;
-  // calculator->loadSpine1(centroids1);
-  // calculator->loadSpine2(centroids2);
+  calculator->spacing1 = spacing1;
+  calculator->spacing2 = spacing2;
+  calculator->loadSpine1(centroids1);
+  calculator->loadSpine2(centroids2);
   // //calculator->loadTransofrm(trans2);
   // //calculator->transformSpine1();
 
-  // //Set colors for spine
-  // double color1[3] = {1, 0, 0};
-  // double color2[3] = {0, 1, 0};
+  //Set colors for spine
+  double color1[3] = {1, 0, 0};
+  double color2[3] = {0, 1, 0};
 
-  // // Setup render window, renderer, and interactor
-  // vtkSmartPointer<vtkRenderer> renderer =
-  // vtkSmartPointer<vtkRenderer>::New();
-  // vtkSmartPointer<vtkRenderWindow> renderWindow =
-  // vtkSmartPointer<vtkRenderWindow>::New();
-  // renderWindow->AddRenderer(renderer);
-  // vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor =
-  // vtkSmartPointer<vtkRenderWindowInteractor>::New();
-  // renderWindowInteractor->SetRenderWindow(renderWindow);
-  // renderer->AddActor(makeLine(calculator->spine1,calculator->spine1Length,color1));
-  // renderer->AddActor(makeLine(calculator->spine2,calculator->spine2Length,color2));
+  // Setup render window, renderer, and interactor
+  vtkSmartPointer<vtkRenderer> renderer =
+  vtkSmartPointer<vtkRenderer>::New();
+  vtkSmartPointer<vtkRenderWindow> renderWindow =
+  vtkSmartPointer<vtkRenderWindow>::New();
+  renderWindow->AddRenderer(renderer);
+  vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor =
+  vtkSmartPointer<vtkRenderWindowInteractor>::New();
+  renderWindowInteractor->SetRenderWindow(renderWindow);
+  renderer->AddActor(makeLine(calculator->spine1,calculator->spine1Length,color1));
+  renderer->AddActor(makeLine(calculator->spine2,calculator->spine2Length,color2));
 
-  // //Ouput final view
-  // renderWindow->Render();
-  // renderWindowInteractor->Start();
+  //Ouput final view
+  renderWindow->Render();
+  renderWindowInteractor->Start();
 
   return EXIT_SUCCESS;
 }

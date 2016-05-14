@@ -7,6 +7,10 @@
 #include <math.h>
 #include <iostream>
 #include <vector>
+#include <fstream>
+#include <iterator>
+#include <string>
+#include <sstream>
 
 //Spine Curvature Calculator
 class ScCalc
@@ -24,6 +28,8 @@ public:
     double* spacing2;
     
     void printVector(std::vector<std::vector<int> > vec);
+    void saveVector(std::vector<std::vector<int> > vec, char* fileName);
+    std::vector<std::vector<int> > loadVector(char* fileName);
     void loadSpine1(double spine[][3], unsigned length);
     void loadSpine2(double spine[][3], unsigned length);
     void loadSpine1(std::vector<std::vector<int>> spine);

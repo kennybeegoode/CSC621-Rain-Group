@@ -2,7 +2,7 @@
 
 using namespace std;
 
-void ScCalc::printVector(std::vector<std::vector<int> > vec)
+void ScCalc::printVector(vector<vector<int> > vec)
 {
   unsigned length = vec.size();
   for (unsigned i = 0; i < length; ++i)
@@ -15,6 +15,51 @@ void ScCalc::printVector(std::vector<std::vector<int> > vec)
       }
       cout << "]" << endl;
   }
+}
+
+void ScCalc::saveVector(vector<vector<int> > vec, char* fileName)
+{
+  unsigned length = vec.size();
+  ofstream f(fileName);
+  for (unsigned i = 0; i < length; ++i)
+  {
+      for (unsigned j = 0; j < 3; ++j)
+      {
+          f << vec[i][j];
+          if (j != 2) f << ',';
+      }
+      f << '\n';
+  }
+}
+
+vector<vector<int>> ScCalc::loadVector(char* fileName)
+{
+    FILE *fp;
+    vector<vector<int> > vec;
+
+    string sFileName = fileName;
+    ifstream fileStream(sFileName);
+    if (!fileStream.is_open())
+    {
+        cout << "Exiting unable to open file " << fileName << endl;
+    }
+
+    string line;
+    while(getline(fileStream, line, '\n')) {
+        stringstream ss(line);
+        vector<int> numbers;
+        string in_line;
+        while(getline (ss, in_line, ',')) 
+        {
+          int i = stoi(in_line, 0);
+          cout << i << ", ";
+          numbers.push_back(i);
+        }
+        vec.push_back(numbers);
+        cout << "\n";
+    }
+
+    return vec;
 }
 
 void ScCalc::loadSpine1(vector<vector<int>> spine)
