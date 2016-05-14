@@ -85,10 +85,7 @@ public:
 
 void Registration::multiResRegistration(string fixedImageInput, string movingImageInput, double transformParameters[][4], int maxNumberOfIterations) {
 
-  cout<<"Working on multi-res image registration."<<endl;
-  cout<<"Please wait.. program will display out soon." <<endl;
-  cout<<"Fixed image input file: " << fixedImageInput <<endl;
-  cout<<"Moving image input file: " << fixedImageInput <<endl;
+  cout<<"Working on multi-res image registration... (please be patient)"<<endl;
 
   const    unsigned int    Dimension = 3;
   typedef  unsigned short  PixelType;
@@ -223,22 +220,41 @@ void Registration::multiResRegistration(string fixedImageInput, string movingIma
   typedef itk::ImageFileWriter< OutputImageType >  WriterType;
   WriterType::Pointer      writer =  WriterType::New();
   CastFilterType::Pointer  caster =  CastFilterType::New();
-  writer->SetFileName( "result-multi-res.mhd" );
-  cout << "Set the resulting image as result-multi-res.mhd" <<endl;
+  writer->SetFileName( "Reg_MultiRes_Result.mhd" );
+
   cout<<endl;
   caster->SetInput( resample->GetOutput() );
   writer->SetInput( caster->GetOutput()   );
+  writer->Update();
+  //
+  // Generate checkerboards before and after registration
+  //
+  typedef itk::CheckerBoardImageFilter< FixedImageType > CheckerBoardFilterType;
+  CheckerBoardFilterType::Pointer checker = CheckerBoardFilterType::New();
+  checker->SetInput1( fixedImage );
+  checker->SetInput2( resample->GetOutput() );
+  caster->SetInput( checker->GetOutput() );
+  writer->SetInput( caster->GetOutput()   );
+  resample->SetDefaultPixelValue( 0 );
+  // Before registration
+  TransformType::Pointer identityTransform = TransformType::New();
+  identityTransform->SetIdentity();
+  resample->SetTransform( identityTransform );
+  writer->SetFileName( "Reg_Tiled_Before.mhd" );
+  writer->Update();
+
+  // After registration
+  resample->SetTransform( finalTransform );
+  writer->SetFileName( "Reg_Tiled_After.mhd" );
   writer->Update();
 }
 
 void Registration::rigidAlign(string fixedImageInput, string movingImageInput, double transformParameters[][4], int maxNumberOfIterations) {
 
-    cout << "Starting Rigid Alignment now with iterations:" << maxNumberOfIterations <<endl;
-    cout<<"Fixed image input file: " << fixedImageInput <<endl;
-    cout<<"Moving image input file: " << fixedImageInput <<endl;
+  cout << "Starting Rigid Alignment now... (please be patient)" << endl;
 
-    //Metrics for time
-    clock_t begin = clock();
+  //Metrics for time
+  clock_t begin = clock();
 
   const unsigned int                          Dimension = 3;
   typedef  float                              PixelType;
@@ -324,13 +340,13 @@ void Registration::rigidAlign(string fixedImageInput, string movingImageInput, d
   optimizer->SetMinimumStepLength( minStepLength );
   optimizer->SetReturnBestParametersAndValue(true);
 
-  cout << endl << endl;
-  cout << "Parameters = " << endl;
-  cout << " optimizerScales  = " << optimizerScales << endl;
-  cout << " translationScale = " << translationScale << endl;
-  cout << " learningRate     = " << learningRate << endl;
-  cout << " minStepLength    = " << minStepLength << endl << endl;
-  cout << " Output from optimizer iterations:" << endl;
+  // cout << endl << endl;
+  // cout << "Parameters = " << endl;
+  // cout << " optimizerScales  = " << optimizerScales << endl;
+  // cout << " translationScale = " << translationScale << endl;
+  // cout << " learningRate     = " << learningRate << endl;
+  // cout << " minStepLength    = " << minStepLength << endl << endl;
+  // cout << " Output from optimizer iterations:" << endl;
 
   CommandIterationUpdate::Pointer observer = CommandIterationUpdate::New();
   optimizer->AddObserver( itk::IterationEvent(), observer );
@@ -394,8 +410,8 @@ void Registration::rigidAlign(string fixedImageInput, string movingImageInput, d
 
   TransformType::MatrixType matrix = finalTransform->GetMatrix();
   TransformType::OffsetType offset = finalTransform->GetOffset();
-  cout << endl << "Matrix = " << endl << matrix << endl;
-  cout << "Offset = " << offset << endl;
+  // cout << endl << "Matrix = " << endl << matrix << endl;
+  // cout << "Offset = " << offset << endl;
 
   typedef itk::ResampleImageFilter<
                             MovingImageType,
@@ -422,9 +438,8 @@ void Registration::rigidAlign(string fixedImageInput, string movingImageInput, d
   WriterType::Pointer      writer =  WriterType::New();
   CastFilterType::Pointer  caster =  CastFilterType::New();
 
-  writer->SetFileName( "result-rigid-registration.mhd" );
+  writer->SetFileName( "Reg_Rigid_Result.mhd" );
 
-  cout << "Set the resulting image as result-rigid-registration.mhd" <<endl;
   cout<<endl;
 
   caster->SetInput( resampler->GetOutput() );
@@ -451,11 +466,27 @@ void Registration::rigidAlign(string fixedImageInput, string movingImageInput, d
 
   resampler->SetDefaultPixelValue( 1 );
 
+  WriterType::Pointer writer2 = WriterType::New();
+  writer2->SetInput( intensityRescaler->GetOutput() );
+  
+  // Compute the difference image between the
+  // fixed and resampled moving image.  
+  writer2->SetFileName( "Reg_Diff_Before.mhd" );
+  writer2->Update();
+    
+  typedef itk::IdentityTransform< double, Dimension > IdentityTransformType;
+  IdentityTransformType::Pointer identity = IdentityTransformType::New();
+  
+  // Compute the difference image between the
+  // fixed and moving image before registration.
+  resampler->SetTransform( identity );
+  writer2->SetFileName( "Reg_Diff_After.mhd" );
+  writer2->Update();
+
   clock_t end = clock();
   double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
 
-  cout<<"The time elapsed was: " << elapsed_secs << " secs" << endl;
-
+ // cout<<"The time elapsed was: " << elapsed_secs << " secs" << endl;
 }
 
 /**
