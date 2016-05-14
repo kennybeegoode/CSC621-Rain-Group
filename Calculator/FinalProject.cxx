@@ -293,8 +293,8 @@ int main(int argc, char *argv[])
     }
   }
 
-  calculator->printVector(centroids1);
-  calculator->printVector(centroids2);
+  //calculator->printVector(centroids1);
+  //calculator->printVector(centroids2);
   
   //Hardcoded segmentation output
   double spiral[7][3] = {{0.0, 0.0, 0.0},

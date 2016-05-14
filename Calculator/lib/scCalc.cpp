@@ -52,11 +52,9 @@ vector<vector<int>> ScCalc::loadVector(char* fileName)
         while(getline (ss, in_line, ',')) 
         {
           int i = stoi(in_line, 0);
-          cout << i << ", ";
           numbers.push_back(i);
         }
         vec.push_back(numbers);
-        cout << "\n";
     }
 
     return vec;
