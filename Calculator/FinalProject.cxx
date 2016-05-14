@@ -17,6 +17,8 @@
 #include <vtkMetaImageReader.h>
 #include <vtkObjectFactory.h>
 #include <vtkResliceImageViewer.h>
+#include <vtkTransform.h>
+#include <vtkAxesActor.h>
 
 #include "lib/scCalc.hh"
 #include "lib/Registration.hh"
@@ -341,6 +343,25 @@ int main(int argc, char *argv[])
   double color1[3] = {1, 0, 0};
   double color2[3] = {0, 1, 0};
 
+  //Create axis
+  vtkSmartPointer<vtkTransform> transform =
+    vtkSmartPointer<vtkTransform>::New();
+  transform->Translate(0.0, 0.0, 0.0);
+
+  vtkSmartPointer<vtkAxesActor> axes =
+    vtkSmartPointer<vtkAxesActor>::New();
+
+  axes->SetUserTransform(transform);
+
+  // properties of the axes labels can be set as follows
+  // this sets the x axis label to red
+  // axes->GetXAxisCaptionActor2D()->GetCaptionTextProperty()->SetColor(1,0,0);
+ 
+  // the actual text of the axis label can be changed:
+  // axes->SetXAxisLabelText("test");
+  axes->SetTotalLength(100,100,100);
+  axes->AxisLabelsOff();
+
   // Setup render window, renderer, and interactor
   vtkSmartPointer<vtkRenderer> renderer =
   vtkSmartPointer<vtkRenderer>::New();
@@ -350,6 +371,7 @@ int main(int argc, char *argv[])
   vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor =
   vtkSmartPointer<vtkRenderWindowInteractor>::New();
   renderWindowInteractor->SetRenderWindow(renderWindow);
+  renderer->AddActor(axes);
   renderer->AddActor(makeLine(calculator->spine1,calculator->spine1Length,color1));
   renderer->AddActor(makeLine(calculator->spine2,calculator->spine2Length,color2));
 
