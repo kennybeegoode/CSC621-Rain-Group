@@ -30,6 +30,8 @@
 
 using namespace std;
 
+
+
 //seed coords
 double seedX, seedY, seedZ;
 bool useDatabase = false;
@@ -38,6 +40,7 @@ bool newFile2 = true;
 //Helper funcion, ignore this
 vtkSmartPointer<vtkActor> makeLine(double data[][3], unsigned length, double color[3])
 {
+
   vtkSmartPointer<vtkPoints> points =
   vtkSmartPointer<vtkPoints>::New();
 
@@ -336,12 +339,18 @@ int main(int argc, char *argv[])
   calculator->spacing2 = spacing2;
   calculator->loadSpine1(centroids1);
   calculator->loadSpine2(centroids2);
+  calculator->crateSpineFit(1);
+  calculator->crateSpineFit(2);
+  calculator->printAngles();
+  // calculator->multidimfit();
   // //calculator->loadTransofrm(trans2);
   // //calculator->transformSpine1();
 
   //Set colors for spine
   double color1[3] = {1, 0, 0};
   double color2[3] = {0, 1, 0};
+  double color3[3] = {0, 0, 1};
+  double color4[3] = {0, 0, 1};
 
   //Create axis
   vtkSmartPointer<vtkTransform> transform =
@@ -374,6 +383,8 @@ int main(int argc, char *argv[])
   renderer->AddActor(axes);
   renderer->AddActor(makeLine(calculator->spine1,calculator->spine1Length,color1));
   renderer->AddActor(makeLine(calculator->spine2,calculator->spine2Length,color2));
+  renderer->AddActor(makeLine(calculator->fit1,calculator->spine1Length,color3));
+  renderer->AddActor(makeLine(calculator->fit2,calculator->spine2Length,color4));
 
   //Ouput final view
   renderWindow->Render();
