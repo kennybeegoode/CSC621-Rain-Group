@@ -158,7 +158,7 @@ void Registration::multiResRegistration(string fixedImageInput, string movingIma
   metric->SetNumberOfSpatialSamples( 50000 );
   metric->ReinitializeSeed( 76926294 );
 
-  optimizer->SetNumberOfIterations( 1 );
+  optimizer->SetNumberOfIterations( maxNumberOfIterations );
   optimizer->SetRelaxationFactor( 0.9 );
   // Create the Command observer and register it with the optimizer.
   //
@@ -236,6 +236,7 @@ void Registration::multiResRegistration(string fixedImageInput, string movingIma
   caster->SetInput( checker->GetOutput() );
   writer->SetInput( caster->GetOutput()   );
   resample->SetDefaultPixelValue( 0 );
+
   // Before registration
   TransformType::Pointer identityTransform = TransformType::New();
   identityTransform->SetIdentity();
@@ -247,6 +248,52 @@ void Registration::multiResRegistration(string fixedImageInput, string movingIma
   resample->SetTransform( finalTransform );
   writer->SetFileName( "Reg_Tiled_After.mhd" );
   writer->Update();
+
+  // interpret final transformation parameters as 4x4 matrix
+  // tokenize the parameters
+  stringstream ss;
+  ss << finalParameters << endl;
+  string paramsString = ss.str();
+  paramsString = paramsString.substr(1, paramsString.length() - 3);
+  vector<double> params_v;
+  char delim = ',';
+  size_t start = paramsString.find_first_not_of(delim), end = start;
+  while (start != string::npos)
+  {
+      end = paramsString.find(delim, start);
+      params_v.push_back(atof(paramsString.substr(start, end - start).c_str()));
+      start = paramsString.find_first_not_of(delim, end);
+  }
+
+  // populate the translation matrix
+  transformParameters[0][0] = params_v[0];
+  transformParameters[1][0] = params_v[1];
+  transformParameters[2][0] = params_v[2];
+
+  transformParameters[0][1] = params_v[3];
+  transformParameters[1][1] = params_v[4];
+  transformParameters[2][1] = params_v[5];
+
+  transformParameters[0][2] = params_v[6];
+  transformParameters[1][2] = params_v[7];
+  transformParameters[2][2] = params_v[8];
+
+  transformParameters[3][0] = params_v[9];
+  transformParameters[3][1] = params_v[10];
+  transformParameters[3][2] = params_v[11];
+
+  transformParameters[0][3] = transformParameters[1][3]
+          = transformParameters[2][3] = 0.0;
+  transformParameters[3][3] = 1.0;
+
+  // display the matrix
+  cout << "   Transform matrix:" << endl;
+  for (int i = 0; i < 4; i++)
+  {
+      for (int j = 0; j < 4; j++)
+          cout << setw(15) << transformParameters[j][i] << " ";
+      cout << endl;
+  }
 }
 
 void Registration::rigidAlign(string fixedImageInput, string movingImageInput, double transformParameters[][4], int maxNumberOfIterations) {
