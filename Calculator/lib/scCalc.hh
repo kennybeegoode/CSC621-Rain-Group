@@ -63,6 +63,7 @@ public:
     void transformSpine1();
     void compareSpines();
     void printSpine1();
+    void printTransform();
     void printAngles();
 	//TODO: add mean square distance function
     //TODO: curve fit function

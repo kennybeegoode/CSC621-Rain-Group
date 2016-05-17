@@ -330,7 +330,7 @@ int main(int argc, char *argv[])
   Registration *reg = new Registration();
 
   //Mutli Res Image Registration
-  double trans[4][4];
+  double (*trans)[4] = new double[4][4];
   //test with 1 iteration of optimizer
   //reg->multiResRegistration(argv[1], argv[2], trans, 1);
 
@@ -345,12 +345,15 @@ int main(int argc, char *argv[])
   calculator->spacing2 = spacing2;
   calculator->loadSpine1(centroids1);
   calculator->loadSpine2(centroids2);
+  //calculator->printSpine1();
+ // calculator->loadTransofrm(trans);
+  //calculator->printTransform();
+  //calculator->transformSpine1();
+ //calculator->printSpine1();
   calculator->crateSpineFit(1);
   calculator->crateSpineFit(2);
   calculator->printAngles();
   // calculator->multidimfit();
-  // //calculator->loadTransofrm(trans2);
-  // //calculator->transformSpine1();
 
   //Set colors for spine
   double color1[3] = {1, 0, 0};

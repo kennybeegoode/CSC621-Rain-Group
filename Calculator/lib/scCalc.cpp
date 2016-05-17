@@ -123,14 +123,14 @@ void ScCalc::loadSpineX(double spine[][3], unsigned length, unsigned spineNumber
     else {spine2 = newSpine; spine2Length = length;}
 }
 
-void ScCalc::loadTransofrm(double matrix[4][4])
+void ScCalc::loadTransofrm(double matrix[][4])
 {
 
     for (unsigned i = 0; i < 4; ++i)
     {
         for (unsigned j = 0; j < 4; ++j)
         {
-            transMatrix[i][j] = matrix[i][j];
+            transMatrix[i][j] = matrix[j][i];
         }
     }
 }
@@ -147,8 +147,9 @@ void ScCalc::transformSpine1()
 
             for(int k=0; k<3; ++k)
             {
-                newSpine[i][j]+=spine1[i][k]*transMatrix[j][k];
+                newSpine[i][j]+= (spine1[i][k]) * (transMatrix[j][k]);
             }
+
             newSpine[i][j]+=transMatrix[j][3];
         }
     }
@@ -190,6 +191,18 @@ void ScCalc::printSpine1()
     }
 }
 
+void ScCalc::printTransform()
+{
+    for (unsigned i = 0; i < 4; ++i)
+    {
+        for (int j = 0; j < 4; ++j)
+        {
+            cout << transMatrix[i][j] << " ";
+        }
+        cout << endl;
+    }
+}
+
 void ScCalc::printAngles()
 {
     cout << endl;
@@ -220,7 +233,7 @@ void ScCalc::printAngles()
         cout << endl;
     }
     cout << "=======================================" << endl;
-    cout << "Spine1 MAX: " << max1 << " Spine2 MAX: " << max2;
+    cout << "Spine1 MAX: " << max1 << " Spine2 MAX: " << max2 << endl;
 }
 
 double ScCalc::firstDerivative(double a[5])
