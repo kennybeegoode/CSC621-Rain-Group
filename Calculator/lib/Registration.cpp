@@ -254,7 +254,7 @@ void Registration::rigidAlign(string fixedImageInput, string movingImageInput, d
   cout << "Starting Rigid Alignment now... (please be patient)" << endl;
 
   //Metrics for time
-  clock_t begin = clock();
+  clock_t begint = clock();
 
   const unsigned int                          Dimension = 3;
   typedef  float                              PixelType;
@@ -468,25 +468,71 @@ void Registration::rigidAlign(string fixedImageInput, string movingImageInput, d
 
   WriterType::Pointer writer2 = WriterType::New();
   writer2->SetInput( intensityRescaler->GetOutput() );
-  
+
   // Compute the difference image between the
-  // fixed and resampled moving image.  
+  // fixed and resampled moving image.
   writer2->SetFileName( "Reg_Diff_Before.mhd" );
   writer2->Update();
-    
+
   typedef itk::IdentityTransform< double, Dimension > IdentityTransformType;
   IdentityTransformType::Pointer identity = IdentityTransformType::New();
-  
+
   // Compute the difference image between the
   // fixed and moving image before registration.
   resampler->SetTransform( identity );
   writer2->SetFileName( "Reg_Diff_After.mhd" );
   writer2->Update();
 
-  clock_t end = clock();
-  double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+  clock_t endt = clock();
+  double elapsed_secs = double(endt - begint) / CLOCKS_PER_SEC;
 
- // cout<<"The time elapsed was: " << elapsed_secs << " secs" << endl;
+  // interpret final transformation parameters as 4x4 matrix
+  // tokenize the parameters
+  stringstream ss;
+  ss << finalParameters << endl;
+  string paramsString = ss.str();
+  paramsString = paramsString.substr(1, paramsString.length() - 3);
+  vector<double> params_v;
+  char delim = ',';
+  size_t start = paramsString.find_first_not_of(delim), end = start;
+  while (start != string::npos)
+  {
+      end = paramsString.find(delim, start);
+      params_v.push_back(atof(paramsString.substr(start, end - start).c_str()));
+      start = paramsString.find_first_not_of(delim, end);
+  }
+
+  // populate the translation matrix
+  transformParameters[0][0] = params_v[0];
+  transformParameters[1][0] = params_v[1];
+  transformParameters[2][0] = params_v[2];
+
+  transformParameters[0][1] = params_v[3];
+  transformParameters[1][1] = params_v[4];
+  transformParameters[2][1] = params_v[5];
+
+  transformParameters[0][2] = params_v[6];
+  transformParameters[1][2] = params_v[7];
+  transformParameters[2][2] = params_v[8];
+
+  transformParameters[3][0] = params_v[9];
+  transformParameters[3][1] = params_v[10];
+  transformParameters[3][2] = params_v[11];
+
+  transformParameters[0][3] = transformParameters[1][3]
+          = transformParameters[2][3] = 0.0;
+  transformParameters[3][3] = 1.0;
+
+  // display the matrix
+  cout << "   Transform matrix:" << endl;
+  for (int i = 0; i < 4; i++)
+  {
+      for (int j = 0; j < 4; j++)
+          cout << setw(15) << transformParameters[j][i] << " ";
+      cout << endl;
+  }
+
+  cout<<"The time elapsed was: " << elapsed_secs << endl;
 }
 
 /**
