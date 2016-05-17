@@ -35,6 +35,7 @@ using namespace std;
 //seed coords
 double seedX, seedY, seedZ;
 bool useDatabase = false;
+bool fitOnly = false;
 bool newFile1 = true;
 bool newFile2 = true;
 //Helper funcion, ignore this
@@ -122,7 +123,12 @@ int main(int argc, char *argv[])
       if (strcmp(argv[i], "-d") == 0)
       {
         useDatabase = true;
-        std::cout << "-d Recognized" <<endl;
+        std::cout << "-d Use Database" <<endl;
+      }
+      if (strcmp(argv[i], "-f") == 0)
+      {
+        fitOnly = true;
+        std::cout << "-f Show fit Only" <<endl;
       }
     }
   }
@@ -350,7 +356,8 @@ int main(int argc, char *argv[])
   double color1[3] = {1, 0, 0};
   double color2[3] = {0, 1, 0};
   double color3[3] = {0, 0, 1};
-  double color4[3] = {0, 0, 1};
+  double *colorA  = color3;
+  double *colorB  = color3;
 
   //Create axis
   vtkSmartPointer<vtkTransform> transform =
@@ -381,10 +388,14 @@ int main(int argc, char *argv[])
   vtkSmartPointer<vtkRenderWindowInteractor>::New();
   renderWindowInteractor->SetRenderWindow(renderWindow);
   renderer->AddActor(axes);
-  renderer->AddActor(makeLine(calculator->spine1,calculator->spine1Length,color1));
-  renderer->AddActor(makeLine(calculator->spine2,calculator->spine2Length,color2));
-  renderer->AddActor(makeLine(calculator->fit1,calculator->spine1Length,color3));
-  renderer->AddActor(makeLine(calculator->fit2,calculator->spine2Length,color4));
+  if (!fitOnly)
+  {
+  	renderer->AddActor(makeLine(calculator->spine1,calculator->spine1Length,color1));
+  	renderer->AddActor(makeLine(calculator->spine2,calculator->spine2Length,color2));
+  } else {colorA = color1; colorB = color2;}
+
+  renderer->AddActor(makeLine(calculator->fit1,calculator->spine1Length,colorA));
+  renderer->AddActor(makeLine(calculator->fit2,calculator->spine2Length,colorB));
 
   //Ouput final view
   renderWindow->Render();
