@@ -1,5 +1,5 @@
 # Spine Curavture Analyais Algorithm (CSC621 Term Project - Team Rain)
-A CT scan image analysis utility designed to assess the severity of scoliosis or other spine illness. Workflow consists of (i) GUI seed selection (ii) spine segmentstion (iii) location of centroids (iv) curve fitting (v) curvature calculation (vi) max curavture angle detection. Analysis is performed on raw 3D CT scan images, outputs include calculated curvature angles as well as curvature visualization.
+A CT scan image analysis utility designed to assess the severity of scoliosis or other spine illness. Analysis pipeline consists of (i) GUI seed selection (ii) spine segmentstion (iii) location of centroids (iv) curve fitting (v) curvature calculation (vi) max curavture angle detection. Analysis is performed on raw 3D CT scan images, outputs include calculated curvature angles as well as curvature visualization.
 
 ## Team
 [Maria Khvalchik](https://github.com/mkhvalchik "Maria Khvalchik's Github account") (Lead)  
